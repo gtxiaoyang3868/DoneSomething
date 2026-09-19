@@ -1,0 +1,34 @@
+<view class="page stats-page" style="--user-font-size:{{fontSize}}rpx;font-size:{{fontSize}}rpx">
+  <view class="stats-toolbar"><text class="stats-toolbar__title">回顾你的每一步</text><view class="toolbar-actions"><button class="export-button" bindtap="openExport">⇩ 导出数据</button><button class="settings-button" bindtap="openSettings">⚙ 设置</button></view></view>
+  <view class="period-tabs">
+    <view class="period-tab {{period === 'week' ? 'period-tab--active' : ''}}" data-period="week" bindtap="choosePeriod">最近一周</view>
+    <view class="period-tab {{period === 'month' ? 'period-tab--active' : ''}}" data-period="month" bindtap="choosePeriod">最近一月</view>
+    <view class="period-tab {{period === 'custom' ? 'period-tab--active' : ''}}" data-period="custom" bindtap="choosePeriod">自定义</view>
+  </view>
+  <view class="custom-range card" wx:if="{{period === 'custom'}}">
+    <view class="date-row"><view><text class="muted">开始日期</text><picker mode="date" value="{{startDate}}" end="{{today}}" data-field="startDate" bindchange="onDateChange"><view class="date-picker">{{startDate}}</view></picker></view><text class="date-to">至</text><view><text class="muted">结束日期</text><picker mode="date" value="{{endDate}}" end="{{today}}" data-field="endDate" bindchange="onDateChange"><view class="date-picker">{{endDate}}</view></picker></view></view>
+    <button class="primary-button range-button" bindtap="applyCustomRange">生成这段时间的统计</button>
+  </view>
+  <view class="achievement">
+    <view class="achievement__head"><view><text class="achievement__title">{{summary.title}}</text><text class="achievement__copy">{{summary.copy}}</text></view><text class="achievement__medal">{{summary.icon}}</text></view>
+    <view class="stat-grid"><view class="stat" data-type="records" bindtap="openStatDetail"><text class="stat__value">{{summary.completed}}</text><text>完成事项 ›</text></view><view class="stat" data-type="projects" bindtap="openStatDetail"><text class="stat__value">{{summary.projects}}</text><text>推进项目 ›</text></view><view class="stat" data-type="days" bindtap="openStatDetail"><text class="stat__value">{{summary.recordDays}}天</text><text>坚持记录 ›</text></view></view>
+    <text class="achievement__highlight">{{summary.highlight}}</text>
+  </view>
+  <view class="chart card">
+    <view class="chart__head"><text>完成趋势</text><text class="muted">{{summary.caption}}</text></view>
+    <view class="bars"><view class="bar-item" wx:for="{{bars}}" wx:key="value" data-type="{{item.detailType}}" data-value="{{item.value}}" bindtap="openStatDetail"><text class="bar-count" wx:if="{{item.count}}">{{item.count}}</text><view class="bar-column {{index === bars.length - 1 ? 'bar-column--last' : ''}}" style="height:{{item.height}}%"></view><text>{{item.label}}</text></view></view>
+    <view class="breakdown-head"><text class="breakdown-title">完成分布</text><view class="breakdown-tabs"><view class="breakdown-tab {{breakdownMode === 'task' ? 'breakdown-tab--active' : ''}}" data-mode="task" bindtap="chooseBreakdown">按任务</view><view class="breakdown-tab {{breakdownMode === 'tag' ? 'breakdown-tab--active' : ''}}" data-mode="tag" bindtap="chooseBreakdown">按标签</view></view></view>
+    <view class="category-list" wx:if="{{breakdownItems.length}}"><view class="category-row" wx:for="{{breakdownItems}}" wx:key="name" data-type="{{item.detailType}}" data-value="{{item.name}}" bindtap="openStatDetail"><view class="category-icon" style="background:{{item.color}};color:#fff">{{item.initial}}</view><view class="category-content"><view class="category-main"><view class="category-labels"><text class="category-name">{{item.name}}</text><text class="category-subtitle">{{item.subtitle}}</text></view><text class="category-count">{{item.count}} 件</text></view><view class="category-progress"><view class="category-progress__fill" style="width:{{item.percent}}%;background:{{item.color}}"></view></view></view><text class="category-chevron">›</text></view></view>
+    <view class="breakdown-empty" wx:else>完成记录出现后，这里会展示任务和标签分布。</view>
+  </view>
+  <view class="sheet-mask" wx:if="{{showExport}}" bindtap="closeExport">
+    <view class="sheet" catchtap="stopPropagation">
+      <view class="sheet__head"><text class="sheet__title">导出记录</text><text class="sheet__close" bindtap="closeExport">×</text></view>
+      <view class="field"><text class="field__label">导出范围</text><picker class="picker" mode="selector" range="{{exportRanges}}" value="{{exportRangeIndex}}" bindchange="onExportRangeChange"><view>{{exportRanges[exportRangeIndex]}}</view></picker></view>
+      <view class="export-option {{exportType === 'excel' ? 'export-option--active' : ''}}" data-type="excel" bindtap="chooseExportType"><view class="export-option__icon">表</view><view><text class="export-option__title">Excel 表格</text><text class="muted">生成 .xls 文件并在微信中打开</text></view></view>
+      <view class="export-option {{exportType === 'feishu' ? 'export-option--active' : ''}}" data-type="feishu" bindtap="chooseExportType"><view class="export-option__icon">飞</view><view><text class="export-option__title">飞书表格</text><text class="muted">授权后创建新表格并同步记录</text></view></view>
+      <text class="export-help">包含日期、分类、关联任务、完成内容、描述和任务进度。</text>
+      <button class="primary-button" bindtap="confirmExport" loading="{{exporting}}">{{exportType === 'excel' ? '生成 Excel' : '导出到飞书'}}</button>
+    </view>
+  </view>
+</view>

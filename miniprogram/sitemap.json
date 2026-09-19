@@ -1,0 +1,4 @@
+{
+  "desc": "每日轨迹为个人私密记录工具",
+  "rules": [{ "action": "disallow", "page": "*" }]
+}

@@ -1,0 +1,22 @@
+const store = require('../../utils/store')
+
+Page({
+  data: {
+    useCloud: false, loading: false, accountName: '', joinCode: '', status: { linked: false, members: [] },
+    fullSync: true, scopeTasks: true, scopeRecords: true, scopeCategories: true
+  },
+  onLoad() { const useCloud = getApp().globalData.useCloud; this.setData({ useCloud, accountName: store.getProfile().nickname || '' }); if (useCloud) this.loadStatus() },
+  async call(action, data = {}) { const res = await wx.cloud.callFunction({ name: 'accountSync', data: { action, ...data } }); const result = res.result || {}; if (!result.ok) throw new Error(result.message || '操作失败'); return result },
+  scopes() { const list = []; if (this.data.scopeTasks) list.push('tasks'); if (this.data.scopeRecords) list.push('records'); if (this.data.scopeCategories) list.push('categories'); return list },
+  applyScopes(scopes) { const scopeTasks = scopes.includes('tasks'); const scopeRecords = scopes.includes('records'); const scopeCategories = scopes.includes('categories'); this.setData({ scopeTasks, scopeRecords, scopeCategories, fullSync: scopeTasks && scopeRecords && scopeCategories }) },
+  async loadStatus() { try { const status = await this.call('status'); this.setData({ status }); this.applyScopes(status.scopes || []) } catch (error) { wx.showModal({ title: '读取失败', content: error.message, showCancel: false }) } },
+  onAccountName(event) { this.setData({ accountName: event.detail.value }) }, onJoinCode(event) { this.setData({ joinCode: event.detail.value }) },
+  toggleFull(event) { const fullSync = event.detail.value; this.setData({ fullSync, scopeTasks: fullSync, scopeRecords: fullSync, scopeCategories: fullSync }) },
+  toggleScope(event) { this.setData({ [event.currentTarget.dataset.scope]: event.detail.value }, () => this.setData({ fullSync: this.data.scopeTasks && this.data.scopeRecords && this.data.scopeCategories })) },
+  async createGroup() { const accountName = this.data.accountName.trim(); if (!accountName) return wx.showToast({ title: '请填写当前微信名称', icon: 'none' }); if (!this.scopes().length) return wx.showToast({ title: '至少选择一项同步数据', icon: 'none' }); this.setData({ loading: true }); try { const result = await this.call('createGroup', { accountName, scopes: this.scopes() }); await this.loadStatus(); this.setData({ 'status.code': result.code }); wx.showModal({ title: '联动码已生成', content: result.code, confirmText: '复制', success: modal => { if (modal.confirm) wx.setClipboardData({ data: result.code }) } }) } catch (error) { wx.showModal({ title: '创建失败', content: error.message, showCancel: false }) } finally { this.setData({ loading: false }) } },
+  async joinGroup() { const accountName = this.data.accountName.trim(); if (!accountName) return wx.showToast({ title: '请填写当前微信名称', icon: 'none' }); if (this.data.joinCode.length !== 6) return wx.showToast({ title: '请输入 6 位联动码', icon: 'none' }); this.setData({ loading: true }); try { await this.call('joinGroup', { accountName, code: this.data.joinCode }); await this.loadStatus(); wx.showToast({ title: '联动成功' }) } catch (error) { wx.showModal({ title: '加入失败', content: error.message, showCancel: false }) } finally { this.setData({ loading: false }) } },
+  async saveScopes() { if (!this.scopes().length) return wx.showToast({ title: '至少选择一项同步数据', icon: 'none' }); this.setData({ loading: true }); try { await this.call('updateScopes', { scopes: this.scopes() }); await this.loadStatus(); wx.showToast({ title: '同步范围已更新' }) } catch (error) { wx.showModal({ title: '保存失败', content: error.message, showCancel: false }) } finally { this.setData({ loading: false }) } },
+  async refreshCode() { this.setData({ loading: true }); try { const result = await this.call('refreshCode'); this.setData({ 'status.code': result.code }); wx.showToast({ title: '已生成新联动码' }) } catch (error) { wx.showModal({ title: '生成失败', content: error.message, showCancel: false }) } finally { this.setData({ loading: false }) } },
+  copyCode() { if (this.data.status.code) wx.setClipboardData({ data: this.data.status.code }) },
+  unlink() { wx.showModal({ title: '退出账号联动', content: '退出后，当前微信只显示自己的数据。已同步数据不会被删除。', success: async modal => { if (!modal.confirm) return; try { await this.call('unlink'); await this.loadStatus(); wx.showToast({ title: '已退出联动' }) } catch (error) { wx.showModal({ title: '无法退出', content: error.message, showCancel: false }) } } }) }
+})

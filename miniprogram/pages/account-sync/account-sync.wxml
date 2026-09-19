@@ -1,0 +1,33 @@
+<view class="page sync-page">
+  <view class="sync-intro card"><text class="sync-intro__title">连接你的多个微信账号</text><text class="muted">最多关联 5 个微信。主账号生成 10 分钟有效的联动码，其他微信输入联动码即可加入。</text></view>
+
+  <view class="cloud-notice card" wx:if="{{!useCloud}}"><text>账号联动需要先启用微信云开发</text><text class="muted">请按照 README 配置云环境，并部署 accountSync 云函数。</text></view>
+
+  <block wx:if="{{useCloud && !status.linked}}">
+    <view class="section-title"><text class="section-title__name">当前微信名称</text></view>
+    <input class="input" value="{{accountName}}" bindinput="onAccountName" placeholder="例如：工作微信、个人微信" adjust-position="{{true}}" cursor-spacing="24" always-embed="{{true}}" />
+    <view class="section-title"><text class="section-title__name">同步范围</text><text class="section-title__meta">创建后仍可修改</text></view>
+    <view class="scope-card card">
+      <view class="scope-row"><view><text>完全同步</text><text class="muted">任务、记录和标签全部同步</text></view><switch checked="{{fullSync}}" color="#207a4b" bindchange="toggleFull" /></view>
+      <view class="scope-row"><view><text>任务看板</text><text class="muted">任务名称、描述与进度</text></view><switch checked="{{scopeTasks}}" disabled="{{fullSync}}" data-scope="scopeTasks" color="#207a4b" bindchange="toggleScope" /></view>
+      <view class="scope-row"><view><text>每日记录</text><text class="muted">完成内容与记录日期</text></view><switch checked="{{scopeRecords}}" disabled="{{fullSync}}" data-scope="scopeRecords" color="#207a4b" bindchange="toggleScope" /></view>
+      <view class="scope-row"><view><text>分类标签</text><text class="muted">自定义的任务标签</text></view><switch checked="{{scopeCategories}}" disabled="{{fullSync}}" data-scope="scopeCategories" color="#207a4b" bindchange="toggleScope" /></view>
+    </view>
+    <button class="primary-button sync-primary-button" bindtap="createGroup" loading="{{loading}}">生成联动码（主账号）</button>
+    <view class="join-divider"><text>或者加入已有联动组</text></view>
+    <view class="join-row"><input class="input code-input" type="number" maxlength="6" value="{{joinCode}}" bindinput="onJoinCode" placeholder="输入 6 位联动码" adjust-position="{{true}}" cursor-spacing="24" always-embed="{{true}}" /><button class="join-button" bindtap="joinGroup" loading="{{loading}}">加入</button></view>
+  </block>
+
+  <block wx:if="{{useCloud && status.linked}}">
+    <view class="link-card card"><text class="link-card__state">已联动 {{status.members.length}} 个微信账号</text><text class="muted">{{status.owner ? '当前微信是主账号' : '同步范围由主账号管理'}}</text><view class="member-list"><view class="member" wx:for="{{status.members}}" wx:key="name"><text>{{item.name}}</text><text class="tag" wx:if="{{item.current}}">当前</text></view></view></view>
+    <view class="section-title"><text class="section-title__name">当前同步范围</text><text class="section-title__meta">{{fullSync ? '完全同步' : '部分同步'}}</text></view>
+    <view class="scope-card card">
+      <view class="scope-row"><text>任务看板</text><switch checked="{{scopeTasks}}" disabled="{{!status.owner}}" data-scope="scopeTasks" color="#207a4b" bindchange="toggleScope" /></view>
+      <view class="scope-row"><text>每日记录</text><switch checked="{{scopeRecords}}" disabled="{{!status.owner}}" data-scope="scopeRecords" color="#207a4b" bindchange="toggleScope" /></view>
+      <view class="scope-row"><text>分类标签</text><switch checked="{{scopeCategories}}" disabled="{{!status.owner}}" data-scope="scopeCategories" color="#207a4b" bindchange="toggleScope" /></view>
+    </view>
+    <button class="primary-button" wx:if="{{status.owner}}" bindtap="saveScopes" loading="{{loading}}">保存同步范围</button>
+    <view class="invite-card card" wx:if="{{status.owner}}"><text class="field__label">邀请其他微信</text><view class="invite-code"><text>{{status.code || '------'}}</text><button bindtap="copyCode">复制</button></view><text class="muted">联动码 10 分钟有效，过期后可重新生成。</text><button class="secondary-button" bindtap="refreshCode" loading="{{loading}}">重新生成联动码</button></view>
+    <button class="danger-button" bindtap="unlink">退出账号联动</button>
+  </block>
+</view>

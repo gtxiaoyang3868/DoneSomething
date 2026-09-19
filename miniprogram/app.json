@@ -1,0 +1,31 @@
+{
+  "pages": [
+    "pages/daily/daily",
+    "pages/tasks/tasks",
+    "pages/stats/stats",
+    "pages/settings/settings",
+    "pages/account-sync/account-sync"
+    ,"pages/task-detail/task-detail"
+    ,"pages/stats-detail/stats-detail"
+  ],
+  "window": {
+    "navigationBarTitleText": "今天干事儿了",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f6f4",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#728077",
+    "selectedColor": "#207a4b",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/daily/daily", "text": "每日完成", "iconPath": "assets/tabbar/daily-normal.png", "selectedIconPath": "assets/tabbar/daily-selected.png" },
+      { "pagePath": "pages/tasks/tasks", "text": "任务看板", "iconPath": "assets/tabbar/tasks-normal.png", "selectedIconPath": "assets/tabbar/tasks-selected.png" },
+      { "pagePath": "pages/stats/stats", "text": "我的成就", "iconPath": "assets/tabbar/stats-normal.png", "selectedIconPath": "assets/tabbar/stats-selected.png" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

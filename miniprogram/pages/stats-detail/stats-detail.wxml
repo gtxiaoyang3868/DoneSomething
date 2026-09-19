@@ -1,0 +1,11 @@
+<view class="page stats-detail-page" style="--user-font-size:{{fontSize}}rpx;font-size:{{fontSize}}rpx">
+  <view class="detail-summary card"><text class="detail-summary__title">{{title}}</text><text class="muted">{{caption}}</text><text class="detail-summary__count">{{count}}</text><text class="muted">{{countLabel}}</text></view>
+
+  <view class="detail-list" wx:if="{{type === 'projects'}}"><view class="project-row card" wx:for="{{projectItems}}" wx:key="_id" data-id="{{item._id}}" bindtap="openTask"><view><text class="item-title">{{item.name}}</text><text class="muted">{{item.category}} · {{item.recordCount}} 条记录</text></view><view class="project-progress"><text>{{item.progress}}%</text><text class="enter">›</text></view></view></view>
+
+  <view class="detail-list" wx:elif="{{type === 'days'}}"><view class="day-row card" wx:for="{{dayItems}}" wx:key="date"><view><text class="item-title">{{item.date}}</text><text class="muted">记录了 {{item.count}} 件事</text></view><text class="enter">›</text></view></view>
+
+  <view class="detail-list" wx:else><view class="record-row card" wx:for="{{recordItems}}" wx:key="_id" data-task="{{item.taskId}}" bindtap="openRecordTask"><view class="record-row__head"><text class="item-title">{{item.title}}</text><text class="muted">{{item.recordDate}}</text></view><text class="record-row__desc" wx:if="{{item.description}}">{{item.description}}</text><view class="record-row__foot"><text class="tag">{{item.taskName || '未关联任务'}}</text><text class="enter" wx:if="{{item.taskId}}">查看任务 ›</text></view></view></view>
+
+  <view class="empty card" wx:if="{{!count}}">这个统计范围内暂无数据。</view>
+</view>

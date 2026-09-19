@@ -1,0 +1,26 @@
+<view class="page settings-page" style="--user-font-size:{{fontSize}}rpx;font-size:{{fontSize}}rpx">
+  <view class="profile-head card">
+    <button class="avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar"><image wx:if="{{profile.avatar}}" src="{{profile.avatar}}" mode="aspectFill" /><text wx:else>我</text></button>
+    <view class="profile-head__body"><text class="profile-head__name">{{profile.nickname || '完善个人资料'}}</text><text class="muted">点击头像可直接使用微信头像</text><text class="profile-head__copy">记录属于你的成长轨迹</text></view>
+  </view>
+
+  <view class="section-title"><text class="section-title__name">字号设置</text><text class="section-title__meta">{{fontSize}} rpx · {{fontLabel}}</text></view>
+  <view class="font-slider card">
+    <view class="font-slider__preview"><text class="font-slider__small">小</text><text style="font-size:{{fontSize}}rpx">每日进步一点点</text><text class="font-slider__large">大</text></view>
+    <slider min="26" max="36" step="1" value="{{fontSize}}" activeColor="#207a4b" backgroundColor="#dfe7e1" block-color="#207a4b" block-size="22" bindchanging="onFontChanging" bindchange="onFontChange" />
+    <view class="font-slider__scale"><text>26</text><text>自由调节</text><text>36</text></view>
+  </view>
+
+  <view class="section-title"><text class="section-title__name">个人基本信息</text><text class="section-title__meta">仅自己可见</text></view>
+  <view class="profile-form card">
+    <view class="field"><text class="field__label">昵称</text><input class="input" type="nickname" value="{{profile.nickname}}" data-field="nickname" bindinput="onInput" placeholder="点击选择或输入微信昵称" adjust-position="{{true}}" cursor-spacing="24" always-embed="{{true}}" /><text class="field-tip">点击输入框可选择微信昵称，也可以自行填写</text></view>
+    <view class="field"><text class="field__label">性别</text><picker class="picker" mode="selector" range="{{genders}}" value="{{genderIndex}}" bindchange="onGenderChange"><view>{{genders[genderIndex]}}</view></picker></view>
+    <view class="field"><text class="field__label">生日</text><picker class="picker" mode="date" value="{{profile.birthday}}" end="{{today}}" bindchange="onBirthdayChange"><view>{{profile.birthday || '请选择生日'}}</view></picker></view>
+    <view class="field"><text class="field__label">所在城市</text><input class="input" value="{{profile.city}}" data-field="city" bindinput="onInput" placeholder="例如：上海" adjust-position="{{true}}" cursor-spacing="24" always-embed="{{true}}" /></view>
+    <view class="field"><text class="field__label">个人简介</text><textarea class="textarea" value="{{profile.bio}}" data-field="bio" bindinput="onInput" placeholder="写一句鼓励自己的话" adjust-position="{{true}}" cursor-spacing="24" /></view>
+    <button class="primary-button" bindtap="saveProfile">保存个人资料</button>
+  </view>
+  <view class="section-title"><text class="section-title__name">多微信账号</text><text class="section-title__meta">可选范围同步</text></view>
+  <view class="account-sync-entry card" bindtap="openAccountSync"><view><text class="account-sync-entry__title">微信账号联动</text><text class="muted">关联多个微信，同步全部或部分轨迹数据</text></view><text class="account-sync-entry__arrow">›</text></view>
+  <text class="privacy-note">个人资料默认保存在本机，不会随数据导出。</text>
+</view>

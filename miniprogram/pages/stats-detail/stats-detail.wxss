@@ -1,0 +1,14 @@
+.stats-detail-page { padding-top: 20rpx; }
+.detail-summary { padding: 26rpx; }
+.detail-summary__title { display: block; font-size: calc(var(--user-font-size,30rpx) + 4rpx); font-weight: 500; }
+.detail-summary__count { display: block; margin-top: 20rpx; color: #207a4b; font-size: 52rpx; font-weight: 500; }
+.detail-list { display: grid; gap: 12rpx; margin-top: 18rpx; }
+.project-row, .day-row, .record-row { padding: 22rpx; }
+.project-row, .day-row, .record-row__head, .record-row__foot { display: flex; justify-content: space-between; align-items: center; gap: 14rpx; }
+.item-title { display: block; margin-bottom: 5rpx; font-weight: 500; }
+.project-progress { display: flex; align-items: center; gap: 12rpx; color: #207a4b; }
+.enter { color: #207a4b; font-size: 24rpx; }
+.record-row { display: block; }
+.record-row__desc { display: block; margin: 8rpx 0 12rpx; color: #728077; line-height: 1.4; }
+.record-row__foot { margin-top: 10rpx; }
+.empty { margin-top: 18rpx; padding: 50rpx 24rpx; color: #728077; text-align: center; }

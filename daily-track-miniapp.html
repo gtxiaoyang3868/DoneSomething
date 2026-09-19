@@ -1,0 +1,446 @@
+<div id="daily-track-miniapp">
+  <style>
+    #daily-track-miniapp {
+      --track-bg: light-dark(#f5f6f4, #111513);
+      --track-surface: light-dark(#ffffff, #1b211e);
+      --track-text: light-dark(#17211b, #f3f7f4);
+      --track-muted: light-dark(#728077, #9aaba0);
+      --track-line: light-dark(#e5eae6, #303a34);
+      --track-green: light-dark(#207a4b, #58c986);
+      --track-green-soft: light-dark(#e4f3e9, #183627);
+      --track-orange: light-dark(#a95e18, #f0a75f);
+      --track-orange-soft: light-dark(#fff0df, #3c2a1a);
+      color: var(--track-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 12px 0;
+    }
+    #daily-track-miniapp * { box-sizing: border-box; }
+    #daily-track-miniapp .track-phone {
+      width: min(100%, 390px);
+      min-height: 740px;
+      background: var(--track-bg);
+      border: 1px solid var(--track-line);
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 18px 45px light-dark(rgba(26,55,37,.14), rgba(0,0,0,.32));
+    }
+    #daily-track-miniapp .track-status { height: 28px; background: var(--track-surface); }
+    #daily-track-miniapp .track-header {
+      background: var(--track-surface);
+      padding: 10px 20px 18px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    #daily-track-miniapp .track-header h2 { margin: 0; font-size: 24px; font-weight: 500; }
+    #daily-track-miniapp .track-date { color: var(--track-muted); margin-top: 3px; font-size: 13px; }
+    #daily-track-miniapp .track-avatar {
+      width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--track-green-soft); color: var(--track-green); font-weight: 500;
+    }
+    #daily-track-miniapp .track-main { padding: 16px 16px 106px; }
+    #daily-track-miniapp .track-summary {
+      background: var(--track-green); color: light-dark(#fff, #0d2115); border-radius: 18px;
+      padding: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+    }
+    #daily-track-miniapp .track-summary strong { font-size: 27px; font-weight: 500; display: block; }
+    #daily-track-miniapp .track-summary span { font-size: 13px; opacity: .86; }
+    #daily-track-miniapp .track-ring {
+      width: 58px; height: 58px; border: 7px solid rgba(255,255,255,.3); border-top-color: currentColor;
+      border-radius: 50%; display: grid; place-items: center; font-size: 12px; transform: rotate(25deg);
+    }
+    #daily-track-miniapp .track-ring b { transform: rotate(-25deg); font-weight: 500; }
+    #daily-track-miniapp .track-section-title { display: flex; justify-content: space-between; align-items: center; margin: 17px 2px 10px; }
+    #daily-track-miniapp .track-section-title h3 { margin: 0; font-size: 16px; font-weight: 500; }
+    #daily-track-miniapp .track-section-title span { color: var(--track-muted); font-size: 12px; }
+    #daily-track-miniapp .track-list { display: grid; gap: 10px; }
+    #daily-track-miniapp .track-item {
+      background: var(--track-surface); border: 1px solid var(--track-line); border-radius: 15px; padding: 14px;
+    }
+    #daily-track-miniapp .track-item-head { display: flex; gap: 10px; align-items: flex-start; }
+    #daily-track-miniapp .track-check {
+      flex: 0 0 auto; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%;
+      background: var(--track-green-soft); color: var(--track-green);
+    }
+    #daily-track-miniapp .track-item h4 { margin: 1px 0 4px; font-size: 15px; font-weight: 500; }
+    #daily-track-miniapp .track-item p { margin: 0; color: var(--track-muted); font-size: 13px; line-height: 1.45; }
+    #daily-track-miniapp .track-tag { display: inline-flex; margin-top: 9px; padding: 3px 8px; border-radius: 20px; background: var(--track-green-soft); color: var(--track-green); font-size: 11px; }
+    #daily-track-miniapp .track-progress { margin-top: 11px; }
+    #daily-track-miniapp .track-progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--track-muted); }
+    #daily-track-miniapp .track-task-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--track-line); }
+    #daily-track-miniapp .track-active-days { display: inline-flex; align-items: center; gap: 5px; color: var(--track-text); font-size: 12px; }
+    #daily-track-miniapp .track-active-days strong { color: var(--track-green); font-weight: 500; }
+    #daily-track-miniapp .track-last-active { color: var(--track-muted); font-size: 11px; }
+    #daily-track-miniapp .track-count-rule { display: flex; align-items: center; gap: 4px; color: var(--track-muted); font-size: 11px; margin: -5px 2px 10px; }
+    #daily-track-miniapp .track-bar { height: 6px; background: var(--track-line); border-radius: 9px; overflow: hidden; margin-top: 6px; }
+    #daily-track-miniapp .track-bar > span { display: block; height: 100%; background: var(--track-green); border-radius: inherit; }
+    #daily-track-miniapp .track-fab {
+      position: absolute; right: 18px; bottom: 78px; width: 54px; height: 54px; border: 3px solid var(--track-surface); border-radius: 50%;
+      display: grid; place-items: center; background: var(--track-green); color: light-dark(#fff, #0d2115); box-shadow: 0 8px 20px rgba(20,90,54,.28); cursor: pointer;
+    }
+    #daily-track-miniapp .track-fab::before,
+    #daily-track-miniapp .track-fab::after { content: ""; position: absolute; background: currentColor; border-radius: 4px; }
+    #daily-track-miniapp .track-fab::before { width: 22px; height: 3px; }
+    #daily-track-miniapp .track-fab::after { width: 3px; height: 22px; }
+    #daily-track-miniapp .track-fab i { display: none; }
+    #daily-track-miniapp .track-fab-spark { position: absolute; right: -2px; top: -6px; font-size: 15px; color: var(--track-orange); transform: rotate(14deg); }
+    #daily-track-miniapp .track-fab[hidden] { display: none; }
+    #daily-track-miniapp .track-nav {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 68px; background: var(--track-surface);
+      border-top: 1px solid var(--track-line); display: grid; grid-template-columns: repeat(3, 1fr);
+    }
+    #daily-track-miniapp .track-tab {
+      border: 0; background: transparent; color: var(--track-muted); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px; cursor: pointer; font-size: 12px;
+    }
+    #daily-track-miniapp .track-tab.is-active { color: var(--track-green); font-weight: 500; }
+    #daily-track-miniapp .track-screen[hidden] { display: none; }
+    #daily-track-miniapp .track-period { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--track-line); padding: 3px; border-radius: 12px; margin-bottom: 10px; }
+    #daily-track-miniapp .track-period button { border: 0; background: transparent; color: var(--track-muted); padding: 8px; border-radius: 9px; cursor: pointer; }
+    #daily-track-miniapp .track-period button.is-active { background: var(--track-surface); color: var(--track-text); box-shadow: 0 2px 8px rgba(20,40,28,.08); font-weight: 500; }
+    #daily-track-miniapp .track-custom-range { background: var(--track-surface); border: 1px solid var(--track-line); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
+    #daily-track-miniapp .track-custom-range[hidden] { display: none; }
+    #daily-track-miniapp .track-date-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: end; }
+    #daily-track-miniapp .track-date-field { display: grid; gap: 5px; }
+    #daily-track-miniapp .track-date-field label { color: var(--track-muted); font-size: 11px; }
+    #daily-track-miniapp .track-date-field input { width: 100%; min-width: 0; color: var(--track-text); background: var(--track-bg); border: 1px solid var(--track-line); border-radius: 9px; padding: 8px; font: inherit; font-size: 12px; }
+    #daily-track-miniapp .track-date-separator { color: var(--track-muted); padding-bottom: 9px; }
+    #daily-track-miniapp .track-range-action { width: 100%; border: 0; border-radius: 10px; padding: 9px; margin-top: 10px; background: var(--track-green); color: light-dark(#fff, #0d2115); cursor: pointer; font-weight: 500; }
+    #daily-track-miniapp .track-range-error { color: var(--track-orange); font-size: 11px; margin-top: 7px; }
+    #daily-track-miniapp .track-range-error[hidden] { display: none; }
+    #daily-track-miniapp .track-stats-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 0 2px 10px; }
+    #daily-track-miniapp .track-stats-toolbar span { color: var(--track-muted); font-size: 12px; }
+    #daily-track-miniapp .track-export-trigger { border: 1px solid var(--track-line); background: var(--track-surface); color: var(--track-text); border-radius: 10px; padding: 7px 10px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 12px; }
+    #daily-track-miniapp .track-export-options { display: grid; gap: 10px; margin: 14px 0; }
+    #daily-track-miniapp .track-export-option { width: 100%; border: 1px solid var(--track-line); background: var(--track-bg); color: var(--track-text); border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; }
+    #daily-track-miniapp .track-export-option.is-selected { border-color: var(--track-green); background: var(--track-green-soft); }
+    #daily-track-miniapp .track-export-icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--track-surface); color: var(--track-green); flex: 0 0 auto; }
+    #daily-track-miniapp .track-export-option strong { display: block; font-weight: 500; margin-bottom: 3px; }
+    #daily-track-miniapp .track-export-option small { color: var(--track-muted); font-size: 11px; }
+    #daily-track-miniapp .track-export-help { color: var(--track-muted); font-size: 11px; line-height: 1.45; margin: 7px 0 0; }
+    #daily-track-miniapp .track-achievement { background: linear-gradient(135deg, var(--track-green), light-dark(#4aa873, #236e45)); color: light-dark(#fff, #071b10); border-radius: 18px; padding: 17px; margin-bottom: 14px; }
+    #daily-track-miniapp .track-achievement-top { display: flex; justify-content: space-between; gap: 12px; }
+    #daily-track-miniapp .track-achievement h3 { margin: 0 0 5px; font-size: 18px; font-weight: 500; }
+    #daily-track-miniapp .track-achievement p { margin: 0; font-size: 12px; opacity: .82; }
+    #daily-track-miniapp .track-medal { font-size: 30px; }
+    #daily-track-miniapp .track-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+    #daily-track-miniapp .track-stat { background: rgba(255,255,255,.14); padding: 9px; border-radius: 11px; }
+    #daily-track-miniapp .track-stat strong { display: block; font-size: 18px; font-weight: 500; }
+    #daily-track-miniapp .track-stat span { font-size: 10px; opacity: .78; }
+    #daily-track-miniapp .track-chart { background: var(--track-surface); border: 1px solid var(--track-line); border-radius: 15px; padding: 14px; }
+    #daily-track-miniapp .track-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    #daily-track-miniapp .track-chart-head h3 { margin: 0; font-size: 15px; font-weight: 500; }
+    #daily-track-miniapp .track-chart-head span { color: var(--track-muted); font-size: 11px; }
+    #daily-track-miniapp .track-bars { height: 118px; display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: 8px; border-bottom: 1px solid var(--track-line); }
+    #daily-track-miniapp .track-bar-day { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+    #daily-track-miniapp .track-column { width: 16px; min-height: 4px; background: var(--track-green-soft); border-radius: 7px 7px 2px 2px; position: relative; transition: height .25s ease; }
+    #daily-track-miniapp .track-column.is-today { background: var(--track-green); }
+    #daily-track-miniapp .track-bar-day span { color: var(--track-muted); font-size: 10px; transform: translateY(20px); position: absolute; }
+    #daily-track-miniapp .track-category-list { display: grid; gap: 10px; margin-top: 26px; }
+    #daily-track-miniapp .track-category { display: grid; grid-template-columns: 70px 1fr 36px; gap: 8px; align-items: center; font-size: 12px; }
+    #daily-track-miniapp .track-category > span:last-child { text-align: right; color: var(--track-muted); }
+    #daily-track-miniapp .track-dialog {
+      position: absolute; inset: 0; z-index: 10; background: rgba(10,16,12,.48); display: flex; align-items: flex-end;
+    }
+    #daily-track-miniapp .track-dialog[hidden] { display: none; }
+    #daily-track-miniapp .track-sheet {
+      width: 100%; background: var(--track-surface); border-radius: 24px 24px 0 0; padding: 18px 18px 22px;
+      max-height: 89%; overflow: auto;
+    }
+    #daily-track-miniapp .track-sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    #daily-track-miniapp .track-sheet-head h3 { margin: 0; font-size: 18px; font-weight: 500; }
+    #daily-track-miniapp .track-close { border: 0; background: transparent; color: var(--track-muted); cursor: pointer; padding: 5px; }
+    #daily-track-miniapp .track-field { display: grid; gap: 6px; margin: 12px 0; }
+    #daily-track-miniapp .track-field label { font-size: 13px; font-weight: 500; }
+    #daily-track-miniapp .track-field select,
+    #daily-track-miniapp .track-field input,
+    #daily-track-miniapp .track-field textarea {
+      width: 100%; color: var(--track-text); background: var(--track-bg); border: 1px solid var(--track-line);
+      border-radius: 11px; padding: 11px 12px; font: inherit;
+    }
+    #daily-track-miniapp .track-field textarea { min-height: 76px; resize: vertical; }
+    #daily-track-miniapp .track-range-line { display: flex; justify-content: space-between; align-items: center; }
+    #daily-track-miniapp .track-range { accent-color: var(--track-green); width: 100%; }
+    #daily-track-miniapp .track-submit {
+      width: 100%; border: 0; border-radius: 12px; padding: 12px; margin-top: 8px; background: var(--track-green);
+      color: light-dark(#fff, #0d2115); font-weight: 500; cursor: pointer;
+    }
+    #daily-track-miniapp .track-note { color: var(--track-muted); font-size: 11px; margin-top: 5px; }
+    #daily-track-miniapp .track-toast {
+      position: absolute; left: 50%; top: 86px; transform: translateX(-50%); z-index: 20;
+      background: var(--track-text); color: var(--track-surface); padding: 8px 13px; border-radius: 20px; font-size: 12px;
+    }
+    #daily-track-miniapp .track-toast[hidden] { display: none; }
+    #daily-track-miniapp [data-screen="daily"] .track-summary { padding: 14px 16px; margin-bottom: 11px; border-radius: 16px; }
+    #daily-track-miniapp [data-screen="daily"] .track-summary strong { font-size: 23px; line-height: 1.2; }
+    #daily-track-miniapp [data-screen="daily"] .track-ring { width: 50px; height: 50px; border-width: 6px; }
+    #daily-track-miniapp [data-screen="daily"] .track-section-title,
+    #daily-track-miniapp [data-screen="tasks"] .track-section-title { margin: 11px 2px 8px; }
+    #daily-track-miniapp [data-screen="daily"] .track-list,
+    #daily-track-miniapp [data-screen="tasks"] .track-list { gap: 7px; }
+    #daily-track-miniapp [data-screen="daily"] .track-item,
+    #daily-track-miniapp [data-screen="tasks"] .track-item { padding: 11px 12px; border-radius: 13px; }
+    #daily-track-miniapp [data-screen="daily"] .track-item-head,
+    #daily-track-miniapp [data-screen="tasks"] .track-item-head { gap: 8px; }
+    #daily-track-miniapp [data-screen="daily"] .track-check,
+    #daily-track-miniapp [data-screen="tasks"] .track-check { width: 22px; height: 22px; }
+    #daily-track-miniapp [data-screen="daily"] .track-item h4,
+    #daily-track-miniapp [data-screen="tasks"] .track-item h4 { margin: 0 0 2px; }
+    #daily-track-miniapp [data-screen="daily"] .track-item p,
+    #daily-track-miniapp [data-screen="tasks"] .track-item p { line-height: 1.35; }
+    #daily-track-miniapp [data-screen="daily"] .track-tag,
+    #daily-track-miniapp [data-screen="tasks"] .track-tag { margin-top: 6px; padding: 2px 7px; }
+    #daily-track-miniapp [data-screen="tasks"] .track-progress { margin-top: 8px; }
+    #daily-track-miniapp [data-screen="tasks"] .track-bar { margin-top: 4px; height: 5px; }
+    #daily-track-miniapp [data-screen="tasks"] .track-task-meta { margin-top: 7px; padding-top: 7px; }
+    #daily-track-miniapp [data-screen="tasks"] .track-count-rule { margin-bottom: 7px; line-height: 1.35; }
+    #daily-track-miniapp [data-screen="tasks"] .track-title-line { display: flex; align-items: center; gap: 7px; min-width: 0; margin-bottom: 2px; }
+    #daily-track-miniapp [data-screen="tasks"] .track-title-line h4 { min-width: 0; margin: 0; }
+    #daily-track-miniapp [data-screen="tasks"] .track-title-line .track-tag { flex: 0 0 auto; margin: 0; }
+    @media (max-width: 420px) {
+      #daily-track-miniapp { padding: 0; }
+      #daily-track-miniapp .track-phone { border-radius: 20px; min-height: 700px; }
+    }
+  </style>
+
+  <section class="track-phone" aria-label="每日轨迹微信小程序交互原型">
+    <div class="track-status"></div>
+    <header class="track-header">
+      <div><h2 id="track-title">每日完成</h2><div class="track-date">8月15日 · 星期六</div></div>
+      <div class="track-avatar" aria-label="用户头像">T</div>
+    </header>
+
+    <main class="track-main">
+      <section class="track-screen" data-screen="daily">
+        <div class="track-summary"><div><span>今天完成</span><strong>3 件事</strong><span>持续记录第 12 天</span></div><div class="track-ring"><b>68%</b></div></div>
+        <div class="track-section-title"><h3>今天的记录</h3><span>共推进 2 个任务</span></div>
+        <div class="track-list" id="track-daily-list">
+          <article class="track-item"><div class="track-item-head"><span class="track-check"><i data-lucide="check" aria-hidden="true"></i></span><div><h4>完成登录页交互稿</h4><p>补齐异常状态，并和开发确认交互细节。</p><span class="track-tag">小程序改版</span></div></div></article>
+          <article class="track-item"><div class="track-item-head"><span class="track-check"><i data-lucide="check" aria-hidden="true"></i></span><div><h4>阅读 30 分钟</h4><p>《设计心理学》第三章笔记。</p><span class="track-tag" style="background:var(--track-orange-soft);color:var(--track-orange)">未关联任务</span></div></div></article>
+          <article class="track-item"><div class="track-item-head"><span class="track-check"><i data-lucide="check" aria-hidden="true"></i></span><div><h4>整理用户访谈结论</h4><p>归纳出 4 个高频问题。</p><span class="track-tag">用户研究</span></div></div></article>
+        </div>
+      </section>
+
+      <section class="track-screen" data-screen="tasks" hidden>
+        <div class="track-section-title"><h3>进行中的任务</h3><span>3 个项目</span></div>
+        <div class="track-count-rule"><i data-lucide="info" aria-hidden="true"></i>执行天数只统计有完成记录的日期，同一天多条记录计 1 天</div>
+        <div class="track-list">
+          <article class="track-item"><div class="track-item-head"><span class="track-check"><i data-lucide="layout-dashboard" aria-hidden="true"></i></span><div style="width:100%"><div class="track-title-line"><h4>微信小程序改版</h4><span class="track-tag">工作</span></div><p>完成核心页面设计与开发联调</p><div class="track-progress"><div class="track-progress-label"><span>当前进度</span><strong id="task-progress-label">65%</strong></div><div class="track-bar"><span id="task-progress-bar" style="width:65%"></span></div></div><div class="track-task-meta"><span class="track-active-days"><i data-lucide="calendar-check" aria-hidden="true"></i>已执行 <strong>12 天</strong></span><span class="track-last-active">今天有记录</span></div></div></div></article>
+          <article class="track-item"><div class="track-item-head"><span class="track-check"><i data-lucide="users" aria-hidden="true"></i></span><div style="width:100%"><div class="track-title-line"><h4>用户研究</h4><span class="track-tag">工作</span></div><p>完成访谈、整理洞察并输出报告</p><div class="track-progress"><div class="track-progress-label"><span>当前进度</span><strong>40%</strong></div><div class="track-bar"><span style="width:40%"></span></div></div><div class="track-task-meta"><span class="track-active-days"><i data-lucide="calendar-check" aria-hidden="true"></i>已执行 <strong>7 天</strong></span><span class="track-last-active">今天有记录</span></div></div></div></article>
+          <article class="track-item"><div class="track-item-head"><span class="track-check"><i data-lucide="book-open" aria-hidden="true"></i></span><div style="width:100%"><div class="track-title-line"><h4>年度阅读计划</h4><span class="track-tag" style="background:var(--track-orange-soft);color:var(--track-orange)">成长</span></div><p>阅读 20 本产品与心理学书籍</p><div class="track-progress"><div class="track-progress-label"><span>当前进度</span><strong>25%</strong></div><div class="track-bar"><span style="width:25%;background:var(--track-orange)"></span></div></div><div class="track-task-meta"><span class="track-active-days"><i data-lucide="calendar-check" aria-hidden="true"></i>已执行 <strong>9 天</strong></span><span class="track-last-active">昨天有记录</span></div></div></div></article>
+        </div>
+      </section>
+
+      <section class="track-screen" data-screen="stats" hidden>
+        <div class="track-stats-toolbar"><span>回顾你的每一步</span><button class="track-export-trigger" id="open-export" type="button"><i data-lucide="download" aria-hidden="true"></i>导出数据</button></div>
+        <div class="track-period" aria-label="统计周期">
+          <button class="is-active" type="button" data-period="week">最近一周</button>
+          <button type="button" data-period="month">最近一月</button>
+          <button type="button" data-period="custom">自定义</button>
+        </div>
+        <div class="track-custom-range" id="custom-range" hidden>
+          <div class="track-date-row">
+            <div class="track-date-field"><label for="date-start">开始日期</label><input id="date-start" type="date" value="2026-08-01" max="2026-08-15" /></div>
+            <span class="track-date-separator">至</span>
+            <div class="track-date-field"><label for="date-end">结束日期</label><input id="date-end" type="date" value="2026-08-15" max="2026-08-15" /></div>
+          </div>
+          <div class="track-range-error" id="range-error" role="alert" hidden>结束日期不能早于开始日期</div>
+          <button class="track-range-action" id="apply-range" type="button">生成这段时间的统计</button>
+        </div>
+        <section class="track-achievement">
+          <div class="track-achievement-top"><div><h3 id="achievement-title">这一周，你很充实</h3><p id="achievement-copy">连续记录 6 天，比上周多完成 4 件事</p></div><div class="track-medal" aria-hidden="true">🏆</div></div>
+          <div class="track-stats">
+            <div class="track-stat"><strong id="stat-done">18</strong><span>完成事项</span></div>
+            <div class="track-stat"><strong id="stat-projects">4</strong><span>推进项目</span></div>
+            <div class="track-stat"><strong id="stat-days">6天</strong><span>坚持记录</span></div>
+          </div>
+        </section>
+        <section class="track-chart">
+          <div class="track-chart-head"><h3>完成趋势</h3><span id="chart-caption">8月9日—15日</span></div>
+          <div class="track-bars" id="trend-bars" role="img" aria-label="最近一周每日完成数量柱状图">
+            <div class="track-bar-day"><div class="track-column" style="height:38%"></div><span>日</span></div>
+            <div class="track-bar-day"><div class="track-column" style="height:55%"></div><span>一</span></div>
+            <div class="track-bar-day"><div class="track-column" style="height:72%"></div><span>二</span></div>
+            <div class="track-bar-day"><div class="track-column" style="height:48%"></div><span>三</span></div>
+            <div class="track-bar-day"><div class="track-column" style="height:86%"></div><span>四</span></div>
+            <div class="track-bar-day"><div class="track-column" style="height:66%"></div><span>五</span></div>
+            <div class="track-bar-day"><div class="track-column is-today" style="height:54%"></div><span>今</span></div>
+          </div>
+          <div class="track-category-list">
+            <div class="track-category"><span>小程序改版</span><div class="track-bar"><span style="width:44%"></span></div><span>8 件</span></div>
+            <div class="track-category"><span>用户研究</span><div class="track-bar"><span style="width:28%"></span></div><span>5 件</span></div>
+            <div class="track-category"><span>个人成长</span><div class="track-bar"><span style="width:22%;background:var(--track-orange)"></span></div><span>4 件</span></div>
+            <div class="track-category"><span>未关联</span><div class="track-bar"><span style="width:6%;background:var(--track-muted)"></span></div><span>1 件</span></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <button class="track-fab" id="track-add" type="button" aria-label="新增记录"><i data-lucide="plus" aria-hidden="true"></i><span class="track-fab-spark" aria-hidden="true">✦</span></button>
+    <nav class="track-nav" aria-label="主要导航">
+      <button class="track-tab is-active" type="button" data-tab="daily"><i data-lucide="circle-check-big" aria-hidden="true"></i><span>每日完成</span></button>
+      <button class="track-tab" type="button" data-tab="tasks"><i data-lucide="kanban-square" aria-hidden="true"></i><span>任务看板</span></button>
+      <button class="track-tab" type="button" data-tab="stats"><i data-lucide="chart-no-axes-column-increasing" aria-hidden="true"></i><span>统计</span></button>
+    </nav>
+
+    <div class="track-dialog" id="track-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden>
+      <form class="track-sheet" id="track-form">
+        <div class="track-sheet-head"><h3 id="dialog-title">记录今日完成</h3><button class="track-close" id="track-close" type="button" aria-label="关闭"><i data-lucide="x" aria-hidden="true"></i></button></div>
+        <div class="track-field"><label for="project">关联任务（选填）</label><select id="project"><option value="none">不关联任何任务</option><option value="miniapp" selected>微信小程序改版 · 当前 65%</option><option value="research">用户研究 · 当前 40%</option><option value="reading">年度阅读计划 · 当前 25%</option></select></div>
+        <div class="track-field"><label for="done-title">做了什么</label><input id="done-title" required value="完成数据统计页面" /></div>
+        <div class="track-field"><label for="done-detail">内容描述（选填）</label><textarea id="done-detail" placeholder="补充过程、结果或心得…">完成图表组件与空状态设计。</textarea></div>
+        <div class="track-field" id="progress-field"><div class="track-range-line"><label for="done-progress">任务完成度更新至</label><strong id="range-value">80%</strong></div><input class="track-range" id="done-progress" type="range" min="65" max="100" value="80" /><div class="track-note">保存后，任务看板进度将从 65% 同步为 80%</div></div>
+        <button class="track-submit" type="submit">保存今日记录</button>
+      </form>
+    </div>
+    <div class="track-dialog" id="export-dialog" role="dialog" aria-modal="true" aria-labelledby="export-title" hidden>
+      <div class="track-sheet">
+        <div class="track-sheet-head"><h3 id="export-title">导出记录</h3><button class="track-close" id="export-close" type="button" aria-label="关闭"><i data-lucide="x" aria-hidden="true"></i></button></div>
+        <div class="track-field"><label for="export-range">导出范围</label><select id="export-range"><option value="current">当前统计区间</option><option value="all">全部历史记录</option></select></div>
+        <div class="track-export-options" role="radiogroup" aria-label="导出方式">
+          <button class="track-export-option is-selected" type="button" data-export-type="excel" role="radio" aria-checked="true"><span class="track-export-icon"><i data-lucide="sheet" aria-hidden="true"></i></span><span><strong>Excel 表格</strong><small>下载 .xls 文件，可直接用 Excel 打开</small></span></button>
+          <button class="track-export-option" type="button" data-export-type="feishu" role="radio" aria-checked="false"><span class="track-export-icon"><i data-lucide="table-2" aria-hidden="true"></i></span><span><strong>飞书表格</strong><small>授权后创建新表格并同步记录</small></span></button>
+        </div>
+        <p class="track-export-help" id="export-help">包含日期、分类、关联任务、完成内容、描述和任务进度。</p>
+        <button class="track-submit" id="confirm-export" type="button">下载 Excel</button>
+      </div>
+    </div>
+    <div class="track-toast" id="track-toast" role="status" hidden>已保存，任务进度同步至 80%</div>
+  </section>
+
+  <script>
+    (() => {
+      const root = document.getElementById('daily-track-miniapp');
+      const title = root.querySelector('#track-title');
+      const dialog = root.querySelector('#track-dialog');
+      const project = root.querySelector('#project');
+      const progressField = root.querySelector('#progress-field');
+      const range = root.querySelector('#done-progress');
+      const rangeValue = root.querySelector('#range-value');
+      const note = progressField.querySelector('.track-note');
+      const toast = root.querySelector('#track-toast');
+      const addButton = root.querySelector('#track-add');
+      const exportDialog = root.querySelector('#export-dialog');
+      let exportType = 'excel';
+      let currentTab = 'daily';
+
+      root.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
+        currentTab = button.dataset.tab;
+        root.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('is-active', b === button));
+        root.querySelectorAll('[data-screen]').forEach(screen => screen.hidden = screen.dataset.screen !== currentTab);
+        title.textContent = currentTab === 'daily' ? '每日完成' : currentTab === 'tasks' ? '任务看板' : '我的成就';
+        addButton.hidden = currentTab === 'stats';
+      }));
+
+      const periodData = {
+        week: { title: '这一周，你很充实', copy: '连续记录 6 天，比上周多完成 4 件事', done: '18', projects: '4', days: '6天', caption: '8月9日—15日', heights: [38,55,72,48,86,66,54] },
+        month: { title: '这个月，进步看得见', copy: '累计完成 63 件事，3 个项目进度过半', done: '63', projects: '7', days: '23天', caption: '7月17日—8月15日', heights: [58,74,45,82,66,91,76] }
+      };
+      const customRange = root.querySelector('#custom-range');
+      const rangeError = root.querySelector('#range-error');
+      const renderPeriod = data => {
+        root.querySelector('#achievement-title').textContent = data.title;
+        root.querySelector('#achievement-copy').textContent = data.copy;
+        root.querySelector('#stat-done').textContent = data.done;
+        root.querySelector('#stat-projects').textContent = data.projects;
+        root.querySelector('#stat-days').textContent = data.days;
+        root.querySelector('#chart-caption').textContent = data.caption;
+        root.querySelectorAll('.track-column').forEach((column, index) => column.style.height = data.heights[index] + '%');
+      };
+      root.querySelectorAll('[data-period]').forEach(button => button.addEventListener('click', () => {
+        root.querySelectorAll('[data-period]').forEach(b => b.classList.toggle('is-active', b === button));
+        const isCustom = button.dataset.period === 'custom';
+        customRange.hidden = !isCustom;
+        rangeError.hidden = true;
+        if (!isCustom) renderPeriod(periodData[button.dataset.period]);
+      }));
+      root.querySelector('#apply-range').addEventListener('click', () => {
+        const startValue = root.querySelector('#date-start').value;
+        const endValue = root.querySelector('#date-end').value;
+        const start = new Date(startValue + 'T00:00:00');
+        const end = new Date(endValue + 'T00:00:00');
+        if (!startValue || !endValue || end < start) { rangeError.hidden = false; return; }
+        rangeError.hidden = true;
+        const span = Math.round((end - start) / 86400000) + 1;
+        const completed = Math.max(1, Math.round(span * 2.3));
+        const recorded = Math.max(1, Math.round(span * .78));
+        const formatDate = date => `${date.getMonth() + 1}月${date.getDate()}日`;
+        renderPeriod({
+          title: `这 ${span} 天，每一步都算数`,
+          copy: `你在自定义时间内留下了 ${completed} 条完成记录`,
+          done: String(completed), projects: String(Math.min(7, Math.max(1, Math.ceil(span / 6)))), days: recorded + '天',
+          caption: `${formatDate(start)}—${formatDate(end)}`,
+          heights: [42,68,54,82,61,75,48].map((value, index) => Math.min(96, value + ((span + index * 7) % 15)))
+        });
+      });
+      root.querySelector('#open-export').addEventListener('click', () => { exportDialog.hidden = false; });
+      root.querySelector('#export-close').addEventListener('click', () => { exportDialog.hidden = true; });
+      exportDialog.addEventListener('click', event => { if (event.target === exportDialog) exportDialog.hidden = true; });
+      root.querySelectorAll('[data-export-type]').forEach(button => button.addEventListener('click', () => {
+        exportType = button.dataset.exportType;
+        root.querySelectorAll('[data-export-type]').forEach(option => {
+          const selected = option === button;
+          option.classList.toggle('is-selected', selected);
+          option.setAttribute('aria-checked', String(selected));
+        });
+        root.querySelector('#confirm-export').textContent = exportType === 'excel' ? '下载 Excel' : '授权并导出到飞书';
+        root.querySelector('#export-help').textContent = exportType === 'excel'
+          ? '包含日期、分类、关联任务、完成内容、描述和任务进度。'
+          : '首次使用需要登录飞书并允许创建表格；之后可选择继续同步。';
+      }));
+      root.querySelector('#confirm-export').addEventListener('click', () => {
+        if (exportType === 'excel') {
+          const rows = [
+            ['日期','分类','关联任务','完成内容','内容描述','任务进度'],
+            ['2026-08-15','工作','微信小程序改版','完成数据统计页面','完成图表组件与空状态设计','80%'],
+            ['2026-08-15','成长','未关联','阅读 30 分钟','《设计心理学》第三章笔记',''],
+            ['2026-08-14','工作','用户研究','整理用户访谈结论','归纳出 4 个高频问题','40%']
+          ];
+          const escapeXml = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          const tableRows = rows.map(row => '<Row>' + row.map(cell => '<Cell><Data ss:Type="String">' + escapeXml(cell) + '</Data></Cell>').join('') + '</Row>').join('');
+          const workbook = '<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="每日轨迹"><Table>' + tableRows + '</Table></Worksheet></Workbook>';
+          const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = '每日轨迹记录.xls';
+          link.click();
+          URL.revokeObjectURL(link.href);
+          toast.textContent = 'Excel 表格已生成';
+        } else {
+          toast.textContent = '飞书授权流程已发起（原型演示）';
+        }
+        exportDialog.hidden = true;
+        toast.hidden = false;
+        setTimeout(() => { toast.hidden = true; }, 2400);
+      });
+
+      root.querySelector('#track-add').addEventListener('click', () => {
+        root.querySelector('#dialog-title').textContent = currentTab === 'daily' ? '记录今日完成' : '新建任务';
+        dialog.hidden = false;
+      });
+      root.querySelector('#track-close').addEventListener('click', () => dialog.hidden = true);
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.hidden = true; });
+      project.addEventListener('change', () => { progressField.hidden = project.value === 'none'; });
+      range.addEventListener('input', () => {
+        rangeValue.textContent = range.value + '%';
+        note.textContent = `保存后，任务看板进度将从 65% 同步为 ${range.value}%`;
+      });
+      root.querySelector('#track-form').addEventListener('submit', event => {
+        event.preventDefault();
+        dialog.hidden = true;
+        if (project.value === 'miniapp') {
+          root.querySelector('#task-progress-label').textContent = range.value + '%';
+          root.querySelector('#task-progress-bar').style.width = range.value + '%';
+          toast.textContent = `已保存，任务进度同步至 ${range.value}%`;
+        } else {
+          toast.textContent = '已保存今日记录';
+        }
+        toast.hidden = false;
+        setTimeout(() => { toast.hidden = true; }, 2200);
+      });
+    })();
+  </script>
+</div>

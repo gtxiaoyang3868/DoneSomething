@@ -1,0 +1,22 @@
+{
+  "tasks": {
+    ".read": "doc._openid == auth.openid",
+    ".write": "doc._openid == auth.openid"
+  },
+  "dailyRecords": {
+    ".read": "doc._openid == auth.openid",
+    ".write": "doc._openid == auth.openid"
+  },
+  "categories": {
+    ".read": "doc._openid == auth.openid",
+    ".write": "doc._openid == auth.openid"
+  },
+  "accountLinks": {
+    ".read": false,
+    ".write": false
+  },
+  "syncGroups": {
+    ".read": false,
+    ".write": false
+  }
+}

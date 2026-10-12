@@ -4,6 +4,8 @@ const TASKS_KEY = 'daily_track_tasks'
 const RECORDS_KEY = 'daily_track_records'
 const CATEGORIES_KEY = 'daily_track_categories'
 const CATEGORY_COLORS_KEY = 'daily_track_category_colors'
+const HABIT_CATEGORIES_KEY = 'daily_track_habit_categories'
+const HABIT_CATEGORY_COLORS_KEY = 'daily_track_habit_category_colors'
 const PROFILE_KEY = 'daily_track_profile'
 const SETTINGS_KEY = 'daily_track_settings'
 const CHECKINS_KEY = 'daily_track_checkins'
@@ -31,6 +33,12 @@ const ensureSeed = () => {
 }
 
 const local = {
+  async listHabitCategories() { return wx.getStorageSync(HABIT_CATEGORIES_KEY) || [] },
+  async getHabitCategoryColors() { return wx.getStorageSync(HABIT_CATEGORY_COLORS_KEY) || {} },
+  async addHabitCategory(name, color = '#3f8f70') { const categories = await this.listHabitCategories(); if (!categories.includes(name)) categories.push(name); const colors = await this.getHabitCategoryColors(); colors[name] = color; wx.setStorageSync(HABIT_CATEGORIES_KEY, categories); wx.setStorageSync(HABIT_CATEGORY_COLORS_KEY, colors); return categories },
+  async renameHabitCategory(oldName, newName) { const categories = (await this.listHabitCategories()).map(name => name === oldName ? newName : name); const colors = await this.getHabitCategoryColors(); colors[newName] = colors[oldName] || '#3f8f70'; delete colors[oldName]; const items = (await this.listCheckinTasks()).map(item => item.category === oldName ? { ...item, category: newName } : item); wx.setStorageSync(HABIT_CATEGORIES_KEY, [...new Set(categories)]); wx.setStorageSync(HABIT_CATEGORY_COLORS_KEY, colors); wx.setStorageSync(CHECKINS_KEY, items); return categories },
+  async deleteHabitCategory(name) { const categories = (await this.listHabitCategories()).filter(item => item !== name); const colors = await this.getHabitCategoryColors(); delete colors[name]; wx.setStorageSync(HABIT_CATEGORIES_KEY, categories); wx.setStorageSync(HABIT_CATEGORY_COLORS_KEY, colors); return categories },
+  async setHabitCategoryColor(name, color) { const colors = await this.getHabitCategoryColors(); colors[name] = color; wx.setStorageSync(HABIT_CATEGORY_COLORS_KEY, colors); return colors },
   async listCheckinTasks() { return wx.getStorageSync(CHECKINS_KEY) || [] },
   async listCheckinLogs(checkinId = '') { const logs = wx.getStorageSync(CHECKIN_LOGS_KEY) || []; return checkinId ? logs.filter(item => item.checkinId === checkinId) : logs },
   async addCheckinTask(data) { const items = await this.listCheckinTasks(); const item = { ...data, _id: `checkin-${Date.now()}`, currentCount: 0, status: 'active', visibility: data.visibility || 'private', createdAt: Date.now() }; items.unshift(item); wx.setStorageSync(CHECKINS_KEY, items); return item },
@@ -100,6 +108,12 @@ const local = {
 const cloud = {
   db() { return wx.cloud.database() },
   async listTasks() { const res = await this.db().collection('tasks').orderBy('createdAt', 'desc').get(); return res.data },
+  async listHabitCategories() { const res = await this.db().collection('categories').where({ kind: 'habit' }).orderBy('order', 'asc').get(); return res.data.map(item => item.name) },
+  async getHabitCategoryColors() { const res = await this.db().collection('categories').where({ kind: 'habit' }).get(); const colors = {}; res.data.forEach(item => { colors[item.name] = item.color || '#728077' }); return colors },
+  async addHabitCategory(name, color) { await this.db().collection('categories').add({ data: { name, color: color || '#3f8f70', kind: 'habit', order: Date.now() } }); return this.listHabitCategories() },
+  async renameHabitCategory(oldName, newName) { const found = await this.db().collection('categories').where({ name: oldName, kind: 'habit' }).get(); if (found.data[0]) await this.db().collection('categories').doc(found.data[0]._id).update({ data: { name: newName } }); await this.db().collection('checkinTasks').where({ category: oldName }).update({ data: { category: newName } }); return this.listHabitCategories() },
+  async deleteHabitCategory(name) { const found = await this.db().collection('categories').where({ name, kind: 'habit' }).get(); if (found.data[0]) await this.db().collection('categories').doc(found.data[0]._id).remove(); return this.listHabitCategories() },
+  async setHabitCategoryColor(name, color) { const found = await this.db().collection('categories').where({ name, kind: 'habit' }).get(); if (found.data[0]) await this.db().collection('categories').doc(found.data[0]._id).update({ data: { color } }); return this.getHabitCategoryColors() },
   async listCheckinTasks() { const res = await this.db().collection('checkinTasks').orderBy('createdAt', 'desc').get(); return res.data },
   async listCheckinLogs(checkinId = '') { const collection = this.db().collection('checkinLogs'); const res = checkinId ? await collection.where({ checkinId }).orderBy('createdAt', 'desc').get() : await collection.orderBy('createdAt', 'desc').get(); return res.data },
   async addCheckinTask(data) { const item = { ...data, currentCount: 0, status: 'active', visibility: data.visibility || 'private', createdAt: this.db().serverDate() }; const res = await this.db().collection('checkinTasks').add({ data: item }); return { ...item, _id: res._id } },
@@ -167,6 +181,12 @@ const syncedCloud = {
     return result.data
   },
   listTasks() { return this.call('listTasks') },
+  async listHabitCategories() { try { return await this.call('listHabitCategories') } catch (error) { if (String(error.message).includes('不支持')) return []; throw error } },
+  async getHabitCategoryColors() { try { return await this.call('getHabitCategoryColors') } catch (error) { if (String(error.message).includes('不支持')) return {}; throw error } },
+  addHabitCategory(name, color) { return this.call('addHabitCategory', { name, color }) },
+  renameHabitCategory(oldName, newName) { return this.call('renameHabitCategory', { oldName, newName }) },
+  deleteHabitCategory(name) { return this.call('deleteHabitCategory', { name }) },
+  setHabitCategoryColor(name, color) { return this.call('setHabitCategoryColor', { name, color }) },
   listCheckinTasks() { return this.call('listCheckinTasks') },
   listCheckinLogs(checkinId = '') { return this.call('listCheckinLogs', { checkinId }) },
   addCheckinTask(data) { return this.call('addCheckinTask', { data }) },
@@ -191,6 +211,12 @@ const syncedCloud = {
 
 const adapter = () => getApp().globalData.useCloud ? syncedCloud : local
 module.exports = {
+  listHabitCategories: () => adapter().listHabitCategories(),
+  getHabitCategoryColors: () => adapter().getHabitCategoryColors(),
+  addHabitCategory: (name, color) => adapter().addHabitCategory(name, color),
+  renameHabitCategory: (oldName, newName) => adapter().renameHabitCategory(oldName, newName),
+  deleteHabitCategory: name => adapter().deleteHabitCategory(name),
+  setHabitCategoryColor: (name, color) => adapter().setHabitCategoryColor(name, color),
   listCheckinTasks: () => adapter().listCheckinTasks(),
   listCheckinLogs: checkinId => adapter().listCheckinLogs(checkinId),
   addCheckinTask: data => adapter().addCheckinTask(data),

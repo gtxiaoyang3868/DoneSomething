@@ -97,7 +97,7 @@ exports.main = async event => {
     if (action === 'listCheckinTasks') return { ok: true, data: (await listData(ctx, 'checkins')).sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0)) }
     if (action === 'listCheckinLogs') { const logs = await listData(ctx, 'checkinLogs'); return { ok: true, data: logs.filter(item => !event.checkinId || item.checkinId === event.checkinId).sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0)) } }
     if (action === 'listCategories') {
-      const categories = await listData(ctx, 'categories')
+      const categories = (await listData(ctx, 'categories')).filter(item => item.kind !== 'habit')
       if (!categories.length) {
         const seeds = [['工作','#3f8f70'],['成长','#d88a3d'],['生活','#7b78b8'],['其他','#728077']]
         for (const [order, item] of seeds.entries()) await db.collection('categories').add({ data: { ownerOpenid: OPENID, name: item[0], color: item[1], order } })
@@ -105,7 +105,9 @@ exports.main = async event => {
       }
       return { ok: true, data: [...new Set(categories.map(item => item.name))] }
     }
-    if (action === 'getCategoryColors') { const categories = await listData(ctx, 'categories'); const colors = {}; categories.forEach(item => { if (!colors[item.name]) colors[item.name] = item.color || '#728077' }); return { ok: true, data: colors } }
+    if (action === 'getCategoryColors') { const categories = (await listData(ctx, 'categories')).filter(item => item.kind !== 'habit'); const colors = {}; categories.forEach(item => { if (!colors[item.name]) colors[item.name] = item.color || '#728077' }); return { ok: true, data: colors } }
+    if (action === 'listHabitCategories') { const categories = (await listData(ctx, 'categories')).filter(item => item.kind === 'habit'); return { ok: true, data: [...new Set(categories.map(item => item.name))] } }
+    if (action === 'getHabitCategoryColors') { const categories = (await listData(ctx, 'categories')).filter(item => item.kind === 'habit'); const colors = {}; categories.forEach(item => { if (!colors[item.name]) colors[item.name] = item.color || '#728077' }); return { ok: true, data: colors } }
     if (action === 'addTask') { const res = await db.collection('tasks').add({ data: { ...event.data, ownerOpenid: OPENID, createdAt: db.serverDate(), status: 'active', progress: Number(event.data.progress || 0) } }); return { ok: true, data: { ...event.data, _id: res._id } } }
     if (action === 'updateTask') { await assertWritable(ctx, 'tasks', event.id); await db.collection('tasks').doc(event.id).update({ data: { ...event.data, progress: Number(event.data.progress), updatedAt: db.serverDate() } }); return { ok: true } }
     if (action === 'deleteTask') {
@@ -132,12 +134,16 @@ exports.main = async event => {
     if (action === 'addCheckinLog') { const task = await assertWritable(ctx, 'checkins', event.data.checkinId); const res = await db.collection('checkinLogs').add({ data: { ...event.data, ownerOpenid: OPENID, createdAt: db.serverDate() } }); const currentCount = Number(task.currentCount || 0) + 1; await db.collection('checkinTasks').doc(task._id).update({ data: { currentCount, status: currentCount >= Number(task.targetCount || 1) ? 'completed' : 'active', updatedAt: db.serverDate() } }); return { ok: true, data: { ...event.data, _id: res._id } } }
     if (action === 'deleteCheckinLog') { const log = await assertWritable(ctx, 'checkinLogs', event.id); const task = await assertWritable(ctx, 'checkins', log.checkinId); await db.collection('checkinLogs').doc(event.id).remove(); await db.collection('checkinTasks').doc(task._id).update({ data: { currentCount: Math.max(0, Number(task.currentCount || 0) - 1), status: 'active', updatedAt: db.serverDate() } }); return { ok: true } }
     if (action === 'addCategory') { await db.collection('categories').add({ data: { ownerOpenid: OPENID, name: event.name, color: event.color || '#3f8f70', order: Date.now() } }); return { ok: true } }
+    if (action === 'addHabitCategory') { await db.collection('categories').add({ data: { ownerOpenid: OPENID, name: event.name, color: event.color || '#3f8f70', kind: 'habit', order: Date.now() } }); return { ok: true } }
+    if (action === 'renameHabitCategory') { const categories = await listData(ctx, 'categories'); for (const doc of categories.filter(item => item.kind === 'habit' && item.name === event.oldName)) await db.collection('categories').doc(doc._id).update({ data: { name: event.newName } }); const habits = await listData(ctx, 'checkins'); for (const habit of habits.filter(item => item.category === event.oldName)) await db.collection('checkinTasks').doc(habit._id).update({ data: { category: event.newName } }); return { ok: true } }
+    if (action === 'deleteHabitCategory') { const categories = await listData(ctx, 'categories'); for (const doc of categories.filter(item => item.kind === 'habit' && item.name === event.name)) await db.collection('categories').doc(doc._id).remove(); return { ok: true } }
+    if (action === 'setHabitCategoryColor') { const categories = await listData(ctx, 'categories'); for (const doc of categories.filter(item => item.kind === 'habit' && item.name === event.name)) await db.collection('categories').doc(doc._id).update({ data: { color: event.color } }); return { ok: true } }
     if (action === 'renameCategory') {
-      for (const type of ['categories', 'tasks', 'records']) { const docs = await listData(ctx, type); for (const doc of docs.filter(item => (type === 'categories' ? item.name : item.category) === event.oldName)) await db.collection(collectionName(type)).doc(doc._id).update({ data: type === 'categories' ? { name: event.newName } : { category: event.newName } }) }
+      for (const type of ['categories', 'tasks', 'records']) { const docs = await listData(ctx, type); for (const doc of docs.filter(item => (type === 'categories' ? item.kind !== 'habit' && item.name === event.oldName : item.category === event.oldName))) await db.collection(collectionName(type)).doc(doc._id).update({ data: type === 'categories' ? { name: event.newName } : { category: event.newName } }) }
       return { ok: true }
     }
-    if (action === 'deleteCategory') { const docs = await listData(ctx, 'categories'); for (const doc of docs.filter(item => item.name === event.name)) await db.collection('categories').doc(doc._id).remove(); return { ok: true } }
-    if (action === 'setCategoryColor') { const docs = await listData(ctx, 'categories'); for (const doc of docs.filter(item => item.name === event.name)) await db.collection('categories').doc(doc._id).update({ data: { color: event.color } }); return { ok: true } }
+    if (action === 'deleteCategory') { const docs = await listData(ctx, 'categories'); for (const doc of docs.filter(item => item.kind !== 'habit' && item.name === event.name)) await db.collection('categories').doc(doc._id).remove(); return { ok: true } }
+    if (action === 'setCategoryColor') { const docs = await listData(ctx, 'categories'); for (const doc of docs.filter(item => item.kind !== 'habit' && item.name === event.name)) await db.collection('categories').doc(doc._id).update({ data: { color: event.color } }); return { ok: true } }
     throw new Error('不支持的操作')
   } catch (error) { console.error(error); return { ok: false, message: error.message } }
 }

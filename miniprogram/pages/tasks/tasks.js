@@ -4,7 +4,7 @@ const { progressColor } = require('../../utils/color')
 
 Page({
   data: {
-    activeSection: 'tasks', tasks: [], completedTasks: [], allTasks: [], records: [], categories: [], categoryColors: {}, filterOptions: [], selectedFilter: '全部', searchQuery: '', expandedTaskIds: {}, showCompleted: false, categoryIndex: 0, fontSize: 30,
+    activeSection: 'tasks', tasks: [], completedTasks: [], allTasks: [], records: [], categories: [], categoryColors: {}, recommendedCategories: [], filterOptions: [], selectedFilter: '全部', searchQuery: '', expandedTaskIds: {}, showCompleted: false, categoryIndex: 0, fontSize: 30,
     showSheet: false, showCategoryManager: false, saving: false, editingId: '', keyboardHeight: 0,
     form: { name: '', description: '', progress: 0 }, categoryDraft: '', editingCategoryIndex: -1,
     colorPalette: ['#3f8f70','#d88a3d','#7b78b8','#3f78b8','#b75b75','#8b6b4a','#4f8f9d','#728077'], selectedCategoryColor: '#3f8f70'
@@ -13,7 +13,7 @@ Page({
   onPullDownRefresh() { this.loadData().finally(() => wx.stopPullDownRefresh()) },
   async loadData() {
     try {
-      const [tasks, records, categories, categoryColors] = await Promise.all([store.listTasks(), store.listRecords(), store.listCategories(), store.getCategoryColors()])
+      const [tasks, records, categories, categoryColors, habitCategories] = await Promise.all([store.listTasks(), store.listRecords(), store.listCategories(), store.getCategoryColors(), store.listHabitCategories()])
       const today = toDateKey(new Date()); const yesterday = toDateKey(new Date(Date.now() - 86400000))
       const enriched = tasks.map(task => {
         const dates = [...new Set(records.filter(record => record.taskId === task._id).map(record => record.recordDate))].sort().reverse()
@@ -22,7 +22,7 @@ Page({
       })
       const selectedFilter = categories.includes(this.data.selectedFilter) ? this.data.selectedFilter : '全部'
       const filterOptions = [{ name: '全部', color: '#207a4b' }, ...categories.map(name => ({ name, color: categoryColors[name] || '#728077' }))]
-      this.setData({ allTasks: enriched, records, categories, categoryColors, filterOptions, selectedFilter }, () => this.applyFilters())
+      this.setData({ allTasks: enriched, records, categories, categoryColors, filterOptions, selectedFilter, recommendedCategories: habitCategories.filter(name => !categories.includes(name)).slice(0, 6) }, () => this.applyFilters())
     } catch (error) { wx.showToast({ title: '数据加载失败', icon: 'none' }) }
   },
   applyFilters() {
@@ -50,6 +50,7 @@ Page({
   openCategoryManager() { this.setData({ showCategoryManager: true, categoryDraft: '', editingCategoryIndex: -1, selectedCategoryColor: '#3f8f70' }) },
   closeCategoryManager() { wx.hideKeyboard(); this.setData({ showCategoryManager: false, keyboardHeight: 0 }) },
   onCategoryDraft(event) { this.setData({ categoryDraft: event.detail.value }) },
+  useRecommendedCategory(event) { this.setData({ categoryDraft: event.currentTarget.dataset.name }) },
   editCategory(event) { const index = Number(event.currentTarget.dataset.index); const name = this.data.categories[index]; this.setData({ editingCategoryIndex: index, categoryDraft: name, selectedCategoryColor: this.data.categoryColors[name] || '#728077' }) },
   chooseCategoryColor(event) { this.setData({ selectedCategoryColor: event.currentTarget.dataset.color }) },
   cancelCategoryEdit() { this.setData({ editingCategoryIndex: -1, categoryDraft: '' }) },

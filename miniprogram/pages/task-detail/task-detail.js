@@ -20,7 +20,18 @@ Page({
   },
   stopPropagation() {}, closeEditors() { wx.hideKeyboard(); this.setData({ showTaskEditor: false, showRecordEditor: false, keyboardHeight: 0 }) },
   onKeyboardHeightChange(event) { this.setData({ keyboardHeight: event.detail.height || 0 }) },
-  openTaskEditor() { const task = this.data.task; this.setData({ showTaskEditor: true, categoryIndex: Math.max(0, this.data.categories.indexOf(task.category)), taskForm: { name: task.name, description: task.description || '', progress: Number(task.progress || 0) }, taskFormProgressColor: progressColor(task.progress) }) },
+  async toggleTaskStatus() {
+    if (this.data.saving) return
+    const task = this.data.task
+    const completed = task.status === 'completed'
+    this.setData({ saving: true })
+    try {
+      await store.updateTask(this.data.id, { name: task.name, description: task.description || '', category: task.category, progress: Number(task.progress || 0), status: completed ? 'active' : 'completed' })
+      await this.loadData()
+      wx.showToast({ title: completed ? '已恢复进行中' : '已标记完成' })
+    } catch (error) { wx.showToast({ title: '状态更新失败', icon: 'none' }) }
+    finally { this.setData({ saving: false }) }
+  },  openTaskEditor() { const task = this.data.task; this.setData({ showTaskEditor: true, categoryIndex: Math.max(0, this.data.categories.indexOf(task.category)), taskForm: { name: task.name, description: task.description || '', progress: Number(task.progress || 0) }, taskFormProgressColor: progressColor(task.progress) }) },
   onTaskInput(event) { this.setData({ [`taskForm.${event.currentTarget.dataset.field}`]: event.detail.value }) },
   onCategoryChange(event) { this.setData({ categoryIndex: Number(event.detail.value) }) },
   onTaskProgress(event) { this.setData({ 'taskForm.progress': event.detail.value, taskFormProgressColor: progressColor(event.detail.value) }) },

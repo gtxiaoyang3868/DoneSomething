@@ -4,7 +4,7 @@ const { progressColor } = require('../../utils/color')
 
 Page({
   data: {
-    tasks: [], allTasks: [], records: [], categories: [], categoryColors: {}, filterOptions: [], selectedFilter: '全部', categoryIndex: 0, fontSize: 30,
+    tasks: [], completedTasks: [], allTasks: [], records: [], categories: [], categoryColors: {}, filterOptions: [], selectedFilter: '全部', searchQuery: '', expandedTaskIds: {}, showCompleted: false, categoryIndex: 0, fontSize: 30,
     showSheet: false, showCategoryManager: false, saving: false, editingId: '', keyboardHeight: 0,
     form: { name: '', description: '', progress: 0 }, categoryDraft: '', editingCategoryIndex: -1,
     colorPalette: ['#3f8f70','#d88a3d','#7b78b8','#3f78b8','#b75b75','#8b6b4a','#4f8f9d','#728077'], selectedCategoryColor: '#3f8f70'
@@ -18,17 +18,29 @@ Page({
       const enriched = tasks.map(task => {
         const dates = [...new Set(records.filter(record => record.taskId === task._id).map(record => record.recordDate))].sort().reverse()
         const last = dates[0]
-        return { ...task, categoryInitial: (task.category || '其').slice(0, 1), categoryColor: categoryColors[task.category] || '#728077', progressColor: progressColor(task.progress), executionDays: dates.length, lastActiveText: last === today ? '今天有记录' : last === yesterday ? '昨天有记录' : last ? `${last.slice(5).replace('-', '月')}日有记录` : '尚未记录' }
+        return { ...task, status: task.status || 'active', categoryInitial: (task.category || '其').slice(0, 1), categoryColor: categoryColors[task.category] || '#728077', progressColor: progressColor(task.progress), executionDays: dates.length, lastActiveText: last === today ? '今天有记录' : last === yesterday ? '昨天有记录' : last ? `${last.slice(5).replace('-', '月')}日有记录` : '尚未记录' }
       })
       const selectedFilter = categories.includes(this.data.selectedFilter) ? this.data.selectedFilter : '全部'
       const filterOptions = [{ name: '全部', color: '#207a4b' }, ...categories.map(name => ({ name, color: categoryColors[name] || '#728077' }))]
-      const filtered = selectedFilter === '全部' ? enriched : enriched.filter(item => item.category === selectedFilter)
-      this.setData({ tasks: filtered, allTasks: enriched, records, categories, categoryColors, filterOptions, selectedFilter })
+      this.setData({ allTasks: enriched, records, categories, categoryColors, filterOptions, selectedFilter }, () => this.applyFilters())
     } catch (error) { wx.showToast({ title: '数据加载失败', icon: 'none' }) }
   },
+  applyFilters() {
+    const query = this.data.searchQuery.trim().toLowerCase()
+    const filtered = this.data.allTasks.filter(item => {
+      const categoryMatch = this.data.selectedFilter === '全部' || item.category === this.data.selectedFilter
+      const searchText = `${item.name || ''} ${item.description || ''} ${item.category || ''}`.toLowerCase()
+      return categoryMatch && (!query || searchText.includes(query))
+    }).map(item => ({ ...item, expanded: !!this.data.expandedTaskIds[item._id] }))
+    this.setData({ tasks: filtered.filter(item => item.status !== 'completed'), completedTasks: filtered.filter(item => item.status === 'completed') })
+  },
+  onSearch(event) { this.setData({ searchQuery: event.detail.value }, () => this.applyFilters()) },
+  clearSearch() { this.setData({ searchQuery: '' }, () => this.applyFilters()) },
+  toggleTask(event) { const id = event.currentTarget.dataset.id; this.setData({ [`expandedTaskIds.${id}`]: !this.data.expandedTaskIds[id] }, () => this.applyFilters()) },
+  toggleCompleted() { this.setData({ showCompleted: !this.data.showCompleted }) },
   openSheet() { this.setData({ showSheet: true, editingId: '', categoryIndex: 0, form: { name: '', description: '', progress: 0 } }) },
   openTaskDetail(event) { wx.navigateTo({ url: `/pages/task-detail/task-detail?id=${event.currentTarget.dataset.id}` }) },
-  selectFilter(event) { const selectedFilter = event.currentTarget.dataset.value; this.setData({ selectedFilter, tasks: selectedFilter === '全部' ? this.data.allTasks : this.data.allTasks.filter(item => item.category === selectedFilter) }) },
+  selectFilter(event) { this.setData({ selectedFilter: event.currentTarget.dataset.value }, () => this.applyFilters()) },
   closeSheet() { wx.hideKeyboard(); this.setData({ showSheet: false, keyboardHeight: 0 }) }, stopPropagation() {},
   onKeyboardHeightChange(event) { this.setData({ keyboardHeight: event.detail.height || 0 }) },
   onInput(event) { this.setData({ [`form.${event.currentTarget.dataset.field}`]: event.detail.value }) },

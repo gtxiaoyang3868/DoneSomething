@@ -1,32 +1,26 @@
 <view class="page daily-page" style="--user-font-size:{{fontSize}}rpx;font-size:{{fontSize}}rpx">
-  <view class="summary">
-    <view><text class="summary__label">今天完成</text><text class="summary__value">{{todayRecords.length}} 件事</text><text class="summary__label">持续记录第 {{streak}} 天</text></view>
-    <view class="summary__ring">{{dayScore}}%</view>
-  </view>
+  <view class="summary"><view><text class="summary__label">今天完成</text><text class="summary__value">{{todayRecords.length}} 件事</text><text class="summary__label">持续记录第 {{streak}} 天</text></view><view class="summary__ring">{{dayScore}}%</view></view>
   <view class="section-title"><text class="section-title__name">今天的记录</text><text class="section-title__meta">推进 {{todayProjectCount}} 个任务</text></view>
   <scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="{{false}}"><view class="filter-row"><view class="filter-chip {{selectedFilter === item.value ? 'filter-chip--active' : ''}}" wx:for="{{filterOptions}}" wx:key="value" data-value="{{item.value}}" bindtap="selectFilter"><text class="filter-chip__dot" style="background:{{item.color}}"></text><text>{{item.label}}</text></view></view></scroll-view>
-  <view class="record-list" wx:if="{{visibleTodayRecords.length}}">
-    <view class="record-card card" wx:for="{{visibleTodayRecords}}" wx:key="_id" data-id="{{item._id}}" bindtap="editRecord">
-      <view class="record-card__check">✓</view>
-      <view class="record-card__body">
-        <view class="record-title-row"><text class="record-card__title">{{item.title}}</text></view>
-        <text class="record-card__desc" wx:if="{{item.description}}">{{item.description}}</text>
-        <text class="tag" style="background:{{item.categoryColor}};color:#fff">{{item.taskName || '未关联任务'}}</text>
-      </view>
+  <view class="record-list" wx:if="{{visibleTodayRecords.length}}"><view class="record-card card" wx:for="{{visibleTodayRecords}}" wx:key="_id" data-id="{{item._id}}" bindtap="editRecord"><view class="record-card__check">✓</view><view class="record-card__body"><view class="record-title-row"><text class="record-card__title">{{item.title}}</text></view><text class="record-card__desc" wx:if="{{item.description}}">{{item.description}}</text><text class="tag" style="background:{{item.categoryColor}};color:#fff">{{item.taskName || '未关联任务'}}</text></view></view></view>
+  <view class="empty card" wx:else>{{todayRecords.length ? '当前标签下没有记录。' : '今天还没有记录，点右下角的＋开始吧。'}}</view>
+
+  <view class="history-section">
+    <view class="section-title history-title" bindtap="toggleHistory"><view><text class="section-title__name">历史记录</text><text class="history-count">{{historyGroups.length}} 天</text></view><text class="section-title__meta">{{showHistory ? '收起' : '展开'}} {{showHistory ? '⌃' : '⌄'}}</text></view>
+    <view wx:if="{{showHistory}}">
+      <view class="history-group" wx:for="{{historyGroups}}" wx:key="date"><view class="history-date"><text>{{item.date}}</text><text>{{item.count}} 条</text></view><view class="record-list"><view class="record-card card history-card" wx:for="{{item.records}}" wx:for-item="record" wx:key="_id" data-id="{{record._id}}" bindtap="editRecord"><view class="record-card__check history-card__dot"></view><view class="record-card__body"><text class="record-card__title">{{record.title}}</text><text class="record-card__desc" wx:if="{{record.description}}">{{record.description}}</text><text class="tag" style="background:{{record.categoryColor}};color:#fff">{{record.taskName || '未关联任务'}}</text></view></view></view></view>
+      <view class="empty card" wx:if="{{!historyGroups.length}}">当前筛选下还没有历史记录。</view>
     </view>
   </view>
-  <view class="empty card" wx:else>{{todayRecords.length ? '当前标签下没有记录。' : '今天还没有记录，点右下角的＋开始吧。'}}</view>
   <view class="fab" bindtap="openSheet" aria-label="新增每日记录">＋</view>
 
-  <view class="sheet-mask" style="bottom:{{keyboardHeight}}px" wx:if="{{showSheet}}" bindtap="closeSheet">
-    <view class="sheet" catchtap="stopPropagation">
-      <view class="sheet__head"><text class="sheet__title">{{editingId ? '编辑今日记录' : '记录今日完成'}}</text><text class="sheet__close" bindtap="closeSheet">×</text></view>
-      <view class="field"><text class="field__label">关联任务（选填）</text><picker class="picker" mode="selector" range="{{taskOptions}}" range-key="name" value="{{taskIndex}}" bindchange="onTaskChange"><view>{{taskOptions[taskIndex].name}}</view></picker></view>
-      <view class="field"><text class="field__label">做了什么</text><input class="input" value="{{form.title}}" data-field="title" bindinput="onInput" placeholder="例如：完成数据统计页面" adjust-position="{{false}}" cursor-spacing="24" always-embed="{{true}}" bindkeyboardheightchange="onKeyboardHeightChange" /></view>
-      <view class="field"><text class="field__label">内容描述（选填）</text><textarea class="textarea" value="{{form.description}}" data-field="description" bindinput="onInput" placeholder="补充过程、结果或心得" adjust-position="{{false}}" cursor-spacing="24" fixed="{{true}}" bindkeyboardheightchange="onKeyboardHeightChange" /></view>
-      <view class="field" wx:if="{{selectedTask}}"><view class="range-head"><text class="field__label">任务完成度更新至</text><text>{{form.progressAfter}}%</text></view><slider value="{{form.progressAfter}}" min="{{selectedTask.progress}}" max="100" activeColor="#207a4b" bindchange="onProgressChange" /><text class="muted">保存后，任务看板进度同步更新</text></view>
-      <button class="primary-button" bindtap="saveRecord" loading="{{saving}}">{{editingId ? '保存修改' : '保存今日记录'}}</button>
-      <button class="danger-button" wx:if="{{editingId}}" bindtap="deleteRecord" disabled="{{saving}}">删除这条记录</button>
-    </view>
-  </view>
+  <view class="sheet-mask" style="bottom:{{keyboardHeight}}px" wx:if="{{showSheet}}" bindtap="closeSheet"><view class="sheet" catchtap="stopPropagation">
+    <view class="sheet__head"><text class="sheet__title">{{editingId ? '编辑记录' : '记录今日完成'}}</text><text class="sheet__close" bindtap="closeSheet">×</text></view>
+    <view class="field"><text class="field__label">记录日期</text><picker class="picker" mode="date" value="{{form.recordDate}}" end="{{today}}" bindchange="onRecordDate"><view>{{form.recordDate}}</view></picker></view>
+    <view class="field"><text class="field__label">关联任务（选填）</text><picker class="picker" mode="selector" range="{{taskOptions}}" range-key="name" value="{{taskIndex}}" bindchange="onTaskChange"><view>{{taskOptions[taskIndex].name}}</view></picker></view>
+    <view class="field"><text class="field__label">做了什么</text><input class="input" value="{{form.title}}" data-field="title" bindinput="onInput" placeholder="例如：完成数据统计页面" adjust-position="{{false}}" cursor-spacing="24" always-embed="{{true}}" bindkeyboardheightchange="onKeyboardHeightChange" /></view>
+    <view class="field"><text class="field__label">内容描述（选填）</text><textarea class="textarea" value="{{form.description}}" data-field="description" bindinput="onInput" placeholder="补充过程、结果或心得" adjust-position="{{false}}" cursor-spacing="24" fixed="{{true}}" bindkeyboardheightchange="onKeyboardHeightChange" /></view>
+    <view class="field" wx:if="{{selectedTask}}"><view class="range-head"><text class="field__label">任务完成度更新至</text><text>{{form.progressAfter}}%</text></view><slider value="{{form.progressAfter}}" min="0" max="100" activeColor="#207a4b" bindchange="onProgressChange" /><text class="muted">保存后，任务看板进度同步更新</text></view>
+    <button class="primary-button" bindtap="saveRecord" loading="{{saving}}">{{editingId ? '保存修改' : '保存今日记录'}}</button><button class="danger-button" wx:if="{{editingId}}" bindtap="deleteRecord" disabled="{{saving}}">删除这条记录</button>
+  </view></view>
 </view>

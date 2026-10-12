@@ -9,13 +9,12 @@
     <view class="task-card card" wx:for="{{tasks}}" wx:key="_id" data-id="{{item._id}}" bindtap="toggleTask">
       <view class="task-card__icon" style="background:{{item.categoryColor}}">{{item.categoryInitial}}</view>
       <view class="task-card__body">
-        <view class="task-title"><text class="task-title__name">{{item.name}}</text></view>
+        <view class="task-title"><text class="task-title__name">{{item.name}}</text><text class="detail-arrow" data-id="{{item._id}}" catchtap="openTaskDetail">›</text></view>
         <view class="progress-head"><text>当前进度</text><text>{{item.progress}}%</text></view>
         <view class="progress"><view class="progress__fill" style="width:{{item.progress}}%;background:{{item.progressColor}}"></view></view>
         <view class="task-expanded" wx:if="{{item.expanded}}">
           <text class="task-card__desc">{{item.description || '暂无任务描述'}}</text>
           <view class="task-meta"><text class="task-meta__days">已执行 <text>{{item.executionDays}} 天</text></text><text class="muted">{{item.lastActiveText}}</text></view>
-          <view class="task-actions"><button class="task-detail-button" data-id="{{item._id}}" catchtap="openTaskDetail">查看完整详情</button><text class="edit-icon" data-id="{{item._id}}" catchtap="openTaskDetail">✎</text></view>
         </view>
       </view>
     </view>

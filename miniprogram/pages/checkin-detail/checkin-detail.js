@@ -16,6 +16,7 @@ Page({
   removePhoto(event) { const index = Number(event.currentTarget.dataset.index); this.setData({ 'form.photos': this.data.form.photos.filter((_, i) => i !== index) }) },
   previewPhoto(event) { wx.previewImage({ current: event.currentTarget.dataset.url, urls: event.currentTarget.dataset.urls }) },
   previewReference(event) { const images = (this.data.item.attachments || []).filter(item => item.type !== 'video').map(item => item.url); wx.previewImage({ current: event.currentTarget.dataset.url, urls: images }) },
+  openReferenceVideoFullscreen(event) { wx.createVideoContext(event.currentTarget.dataset.videoid, this).requestFullScreen({ direction: 0 }) },
   async saveCheckin() { this.setData({ saving: true }); try { await store.addCheckinLog({ checkinId: this.data.id, note: this.data.form.note.trim(), photos: this.data.form.photos, checkinDate: toDateKey(new Date()) }); this.closeSheet(); await this.loadData(); wx.showToast({ title: '打卡成功' }) } catch (error) { wx.showToast({ title: '打卡失败', icon: 'none' }) } finally { this.setData({ saving: false }) } },
   deleteLog(event) { const id = event.currentTarget.dataset.id; wx.showModal({ title: '删除这次打卡', content: '删除后累计次数会减 1。', confirmColor: '#c53929', success: async result => { if (!result.confirm) return; try { await store.deleteCheckinLog(id); await this.loadData(); wx.showToast({ title: '已删除' }) } catch (error) { wx.showToast({ title: '删除失败', icon: 'none' }) } } }) }
 })

@@ -14,7 +14,7 @@
 .task-card { display: flex; align-items: flex-start; gap: 16rpx; padding: 24rpx; }
 .task-card__icon { width: 42rpx; height: 42rpx; flex: 0 0 42rpx; display: flex; justify-content: center; align-items: center; border-radius: 50%; color: #fff; font-size: 22rpx; font-weight: 600; line-height: 1; }
 .task-card__body { min-width: 0; flex: 1; }
-.task-title { display: block; min-height: 42rpx; margin-bottom: 5rpx; }
+.task-title { display: grid; grid-template-columns:minmax(0,1fr) 52rpx; align-items:center;gap:12rpx; min-height: 52rpx; margin-bottom: 5rpx; }
 .task-title__name { min-width: 0; font-size: var(--user-font-size, 30rpx); font-weight: 600; line-height: 1.3; }
 .task-card__desc { display: block; color: #8e8e93; font-size: calc(var(--user-font-size, 30rpx) - 4rpx); line-height: 1.4; }
 .progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-top: 16rpx; color: #8e8e93; font-size: 22rpx; }
@@ -43,9 +43,7 @@
 .search-box__clear { color: #8e8e93; font-size: 34rpx; text-align: center; }
 .task-expanded { margin-top: 14rpx; padding-top: 14rpx; border-top: 1rpx solid #e5e5ea; }
 .task-expanded .task-meta { border-top: 0; margin-top: 10rpx; padding-top: 0; }
-.task-actions{display:grid;grid-template-columns:1fr 72rpx;gap:12rpx;margin-top:14rpx}.task-detail-button { width: 100%; height: 72rpx; margin: 0; padding: 0; border: 0; border-radius: 18rpx; background: #e4f3e9; color: #207a4b; font-size: 25rpx; font-weight: 600; line-height: 72rpx; }
-.task-detail-button::after { border: 0; }
-.edit-icon{height:72rpx;display:flex;align-items:center;justify-content:center;border-radius:18rpx;background:#f2f2f7;color:#207a4b;font-size:34rpx}
+.detail-arrow{width:52rpx;height:52rpx;display:flex;align-items:center;justify-content:center;border-radius:16rpx;background:#207a4b;color:#fff;font-size:38rpx;font-weight:400;line-height:1}
 .completed-panel { margin-top: 20rpx; overflow: hidden; }
 .completed-panel__head { min-height: 88rpx; padding: 0 22rpx; display: flex; align-items: center; justify-content: space-between; }
 .completed-panel__title { font-weight: 600; }

@@ -2,9 +2,9 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
-const ALL_SCOPES = ['tasks', 'records', 'categories']
+const ALL_SCOPES = ['tasks', 'records', 'categories', 'checkins']
 
-const collectionName = type => ({ tasks: 'tasks', records: 'dailyRecords', categories: 'categories' }[type])
+const collectionName = type => ({ tasks: 'tasks', records: 'dailyRecords', categories: 'categories', checkins: 'checkinTasks', checkinLogs: 'checkinLogs' }[type])
 const makeCode = () => String(Math.floor(100000 + Math.random() * 900000))
 const uniqueDocs = docs => [...new Map(docs.map(item => [item._id, item])).values()]
 
@@ -17,7 +17,8 @@ async function getContext(openid) {
 }
 
 function allowedOpenids(ctx, type) {
-  if (ctx.linked && ctx.scopes.includes(type)) return ctx.members.map(item => item.openid)
+  const scope = type === 'checkinLogs' ? 'checkins' : type
+  if (ctx.linked && ctx.scopes.includes(scope)) return ctx.members.map(item => item.openid)
   return [ctx.openid]
 }
 
@@ -93,6 +94,8 @@ exports.main = async event => {
     if (linkResult) return linkResult
     if (action === 'listTasks') return { ok: true, data: (await listData(ctx, 'tasks')).sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || ''))) }
     if (action === 'listRecords') return { ok: true, data: (await listData(ctx, 'records')).sort((a, b) => String(b.recordDate || '').localeCompare(String(a.recordDate || ''))) }
+    if (action === 'listCheckinTasks') return { ok: true, data: (await listData(ctx, 'checkins')).sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0)) }
+    if (action === 'listCheckinLogs') { const logs = await listData(ctx, 'checkinLogs'); return { ok: true, data: logs.filter(item => !event.checkinId || item.checkinId === event.checkinId).sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0)) } }
     if (action === 'listCategories') {
       const categories = await listData(ctx, 'categories')
       if (!categories.length) {
@@ -123,6 +126,11 @@ exports.main = async event => {
       return { ok: true }
     }
     if (action === 'deleteRecord') { await assertWritable(ctx, 'records', event.id); await db.collection('dailyRecords').doc(event.id).remove(); return { ok: true } }
+    if (action === 'addCheckinTask') { const data = event.data || {}; const res = await db.collection('checkinTasks').add({ data: { ...data, ownerOpenid: OPENID, currentCount: 0, status: 'active', visibility: data.visibility || 'private', createdAt: db.serverDate() } }); return { ok: true, data: { ...data, _id: res._id, currentCount: 0, status: 'active' } } }
+    if (action === 'updateCheckinTask') { await assertWritable(ctx, 'checkins', event.id); await db.collection('checkinTasks').doc(event.id).update({ data: { ...event.data, updatedAt: db.serverDate() } }); return { ok: true } }
+    if (action === 'deleteCheckinTask') { await assertWritable(ctx, 'checkins', event.id); const logs = await listData(ctx, 'checkinLogs'); for (const log of logs.filter(item => item.checkinId === event.id)) await db.collection('checkinLogs').doc(log._id).remove(); await db.collection('checkinTasks').doc(event.id).remove(); return { ok: true } }
+    if (action === 'addCheckinLog') { const task = await assertWritable(ctx, 'checkins', event.data.checkinId); const res = await db.collection('checkinLogs').add({ data: { ...event.data, ownerOpenid: OPENID, createdAt: db.serverDate() } }); const currentCount = Number(task.currentCount || 0) + 1; await db.collection('checkinTasks').doc(task._id).update({ data: { currentCount, status: currentCount >= Number(task.targetCount || 1) ? 'completed' : 'active', updatedAt: db.serverDate() } }); return { ok: true, data: { ...event.data, _id: res._id } } }
+    if (action === 'deleteCheckinLog') { const log = await assertWritable(ctx, 'checkinLogs', event.id); const task = await assertWritable(ctx, 'checkins', log.checkinId); await db.collection('checkinLogs').doc(event.id).remove(); await db.collection('checkinTasks').doc(task._id).update({ data: { currentCount: Math.max(0, Number(task.currentCount || 0) - 1), status: 'active', updatedAt: db.serverDate() } }); return { ok: true } }
     if (action === 'addCategory') { await db.collection('categories').add({ data: { ownerOpenid: OPENID, name: event.name, color: event.color || '#3f8f70', order: Date.now() } }); return { ok: true } }
     if (action === 'renameCategory') {
       for (const type of ['categories', 'tasks', 'records']) { const docs = await listData(ctx, type); for (const doc of docs.filter(item => (type === 'categories' ? item.name : item.category) === event.oldName)) await db.collection(collectionName(type)).doc(doc._id).update({ data: type === 'categories' ? { name: event.newName } : { category: event.newName } }) }

@@ -7,6 +7,8 @@
     "pages/account-sync/account-sync"
     ,"pages/task-detail/task-detail"
     ,"pages/stats-detail/stats-detail"
+    ,"pages/checkins/checkins"
+    ,"pages/checkin-detail/checkin-detail"
   ],
   "window": {
     "navigationBarTitleText": "今天干事儿了",

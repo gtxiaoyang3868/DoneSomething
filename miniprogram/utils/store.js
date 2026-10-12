@@ -6,6 +6,8 @@ const CATEGORIES_KEY = 'daily_track_categories'
 const CATEGORY_COLORS_KEY = 'daily_track_category_colors'
 const PROFILE_KEY = 'daily_track_profile'
 const SETTINGS_KEY = 'daily_track_settings'
+const CHECKINS_KEY = 'daily_track_checkins'
+const CHECKIN_LOGS_KEY = 'daily_track_checkin_logs'
 const seedCategories = ['工作', '成长', '生活', '其他']
 const seedCategoryColors = { '工作': '#3f8f70', '成长': '#d88a3d', '生活': '#7b78b8', '其他': '#728077' }
 
@@ -29,6 +31,13 @@ const ensureSeed = () => {
 }
 
 const local = {
+  async listCheckinTasks() { return wx.getStorageSync(CHECKINS_KEY) || [] },
+  async listCheckinLogs(checkinId = '') { const logs = wx.getStorageSync(CHECKIN_LOGS_KEY) || []; return checkinId ? logs.filter(item => item.checkinId === checkinId) : logs },
+  async addCheckinTask(data) { const items = await this.listCheckinTasks(); const item = { ...data, _id: `checkin-${Date.now()}`, currentCount: 0, status: 'active', visibility: data.visibility || 'private', createdAt: Date.now() }; items.unshift(item); wx.setStorageSync(CHECKINS_KEY, items); return item },
+  async updateCheckinTask(id, updates) { const items = await this.listCheckinTasks(); const next = items.map(item => item._id === id ? { ...item, ...updates, updatedAt: Date.now() } : item); wx.setStorageSync(CHECKINS_KEY, next); return next.find(item => item._id === id) },
+  async deleteCheckinTask(id) { const items = await this.listCheckinTasks(); const logs = await this.listCheckinLogs(); wx.setStorageSync(CHECKINS_KEY, items.filter(item => item._id !== id)); wx.setStorageSync(CHECKIN_LOGS_KEY, logs.filter(item => item.checkinId !== id)) },
+  async addCheckinLog(data) { const logs = await this.listCheckinLogs(); const item = { ...data, _id: `checkin-log-${Date.now()}`, createdAt: Date.now() }; logs.unshift(item); wx.setStorageSync(CHECKIN_LOGS_KEY, logs); const tasks = await this.listCheckinTasks(); const next = tasks.map(task => { if (task._id !== data.checkinId) return task; const currentCount = Number(task.currentCount || 0) + 1; return { ...task, currentCount, status: currentCount >= Number(task.targetCount || 1) ? 'completed' : 'active', updatedAt: Date.now() } }); wx.setStorageSync(CHECKINS_KEY, next); return item },
+  async deleteCheckinLog(id) { const logs = await this.listCheckinLogs(); const removed = logs.find(item => item._id === id); wx.setStorageSync(CHECKIN_LOGS_KEY, logs.filter(item => item._id !== id)); if (removed) { const tasks = await this.listCheckinTasks(); wx.setStorageSync(CHECKINS_KEY, tasks.map(task => task._id === removed.checkinId ? { ...task, currentCount: Math.max(0, Number(task.currentCount || 0) - 1), status: 'active', updatedAt: Date.now() } : task)) } },
   async listTasks() { ensureSeed(); return wx.getStorageSync(TASKS_KEY) || [] },
   async listRecords() { ensureSeed(); return wx.getStorageSync(RECORDS_KEY) || [] },
   async addTask(task) {
@@ -91,6 +100,13 @@ const local = {
 const cloud = {
   db() { return wx.cloud.database() },
   async listTasks() { const res = await this.db().collection('tasks').orderBy('createdAt', 'desc').get(); return res.data },
+  async listCheckinTasks() { const res = await this.db().collection('checkinTasks').orderBy('createdAt', 'desc').get(); return res.data },
+  async listCheckinLogs(checkinId = '') { const collection = this.db().collection('checkinLogs'); const res = checkinId ? await collection.where({ checkinId }).orderBy('createdAt', 'desc').get() : await collection.orderBy('createdAt', 'desc').get(); return res.data },
+  async addCheckinTask(data) { const item = { ...data, currentCount: 0, status: 'active', visibility: data.visibility || 'private', createdAt: this.db().serverDate() }; const res = await this.db().collection('checkinTasks').add({ data: item }); return { ...item, _id: res._id } },
+  async updateCheckinTask(id, updates) { await this.db().collection('checkinTasks').doc(id).update({ data: { ...updates, updatedAt: this.db().serverDate() } }); return { ...updates, _id: id } },
+  async deleteCheckinTask(id) { const logs = await this.db().collection('checkinLogs').where({ checkinId: id }).limit(100).get(); await Promise.all(logs.data.map(item => this.db().collection('checkinLogs').doc(item._id).remove())); await this.db().collection('checkinTasks').doc(id).remove() },
+  async addCheckinLog(data) { const res = await this.db().collection('checkinLogs').add({ data: { ...data, createdAt: this.db().serverDate() } }); const task = (await this.db().collection('checkinTasks').doc(data.checkinId).get()).data; const currentCount = Number(task.currentCount || 0) + 1; await this.db().collection('checkinTasks').doc(data.checkinId).update({ data: { currentCount, status: currentCount >= Number(task.targetCount || 1) ? 'completed' : 'active', updatedAt: this.db().serverDate() } }); return { ...data, _id: res._id } },
+  async deleteCheckinLog(id) { const log = (await this.db().collection('checkinLogs').doc(id).get()).data; await this.db().collection('checkinLogs').doc(id).remove(); const task = (await this.db().collection('checkinTasks').doc(log.checkinId).get()).data; await this.db().collection('checkinTasks').doc(log.checkinId).update({ data: { currentCount: Math.max(0, Number(task.currentCount || 0) - 1), status: 'active', updatedAt: this.db().serverDate() } }) },
   async listRecords() {
     const collection = this.db().collection('dailyRecords')
     const pageSize = 20
@@ -151,6 +167,13 @@ const syncedCloud = {
     return result.data
   },
   listTasks() { return this.call('listTasks') },
+  listCheckinTasks() { return this.call('listCheckinTasks') },
+  listCheckinLogs(checkinId = '') { return this.call('listCheckinLogs', { checkinId }) },
+  addCheckinTask(data) { return this.call('addCheckinTask', { data }) },
+  updateCheckinTask(id, data) { return this.call('updateCheckinTask', { id, data }) },
+  deleteCheckinTask(id) { return this.call('deleteCheckinTask', { id }) },
+  addCheckinLog(data) { return this.call('addCheckinLog', { data }) },
+  deleteCheckinLog(id) { return this.call('deleteCheckinLog', { id }) },
   listRecords() { return this.call('listRecords') },
   listCategories() { return this.call('listCategories') },
   getCategoryColors() { return this.call('getCategoryColors') },
@@ -168,6 +191,13 @@ const syncedCloud = {
 
 const adapter = () => getApp().globalData.useCloud ? syncedCloud : local
 module.exports = {
+  listCheckinTasks: () => adapter().listCheckinTasks(),
+  listCheckinLogs: checkinId => adapter().listCheckinLogs(checkinId),
+  addCheckinTask: data => adapter().addCheckinTask(data),
+  updateCheckinTask: (id, data) => adapter().updateCheckinTask(id, data),
+  deleteCheckinTask: id => adapter().deleteCheckinTask(id),
+  addCheckinLog: data => adapter().addCheckinLog(data),
+  deleteCheckinLog: id => adapter().deleteCheckinLog(id),
   listTasks: () => adapter().listTasks(),
   listRecords: () => adapter().listRecords(),
   listCategories: () => adapter().listCategories(),

@@ -8,10 +8,11 @@
     <input class="input" value="{{accountName}}" bindinput="onAccountName" placeholder="例如：工作微信、个人微信" adjust-position="{{true}}" cursor-spacing="24" always-embed="{{true}}" />
     <view class="section-title"><text class="section-title__name">同步范围</text><text class="section-title__meta">创建后仍可修改</text></view>
     <view class="scope-card card">
-      <view class="scope-row"><view><text>完全同步</text><text class="muted">任务、记录和标签全部同步</text></view><switch checked="{{fullSync}}" color="#207a4b" bindchange="toggleFull" /></view>
+      <view class="scope-row"><view><text>完全同步</text><text class="muted">任务、记录、标签和打卡全部同步</text></view><switch checked="{{fullSync}}" color="#207a4b" bindchange="toggleFull" /></view>
       <view class="scope-row"><view><text>任务看板</text><text class="muted">任务名称、描述与进度</text></view><switch checked="{{scopeTasks}}" disabled="{{fullSync}}" data-scope="scopeTasks" color="#207a4b" bindchange="toggleScope" /></view>
       <view class="scope-row"><view><text>每日记录</text><text class="muted">完成内容与记录日期</text></view><switch checked="{{scopeRecords}}" disabled="{{fullSync}}" data-scope="scopeRecords" color="#207a4b" bindchange="toggleScope" /></view>
       <view class="scope-row"><view><text>分类标签</text><text class="muted">自定义的任务标签</text></view><switch checked="{{scopeCategories}}" disabled="{{fullSync}}" data-scope="scopeCategories" color="#207a4b" bindchange="toggleScope" /></view>
+      <view class="scope-row"><view><text>打卡任务</text><text class="muted">打卡目标、日记和照片</text></view><switch checked="{{scopeCheckins}}" disabled="{{fullSync}}" data-scope="scopeCheckins" color="#207a4b" bindchange="toggleScope" /></view>
     </view>
     <button class="primary-button sync-primary-button" bindtap="createGroup" loading="{{loading}}">生成联动码（主账号）</button>
     <view class="join-divider"><text>或者加入已有联动组</text></view>
@@ -25,6 +26,7 @@
       <view class="scope-row"><text>任务看板</text><switch checked="{{scopeTasks}}" disabled="{{!status.owner}}" data-scope="scopeTasks" color="#207a4b" bindchange="toggleScope" /></view>
       <view class="scope-row"><text>每日记录</text><switch checked="{{scopeRecords}}" disabled="{{!status.owner}}" data-scope="scopeRecords" color="#207a4b" bindchange="toggleScope" /></view>
       <view class="scope-row"><text>分类标签</text><switch checked="{{scopeCategories}}" disabled="{{!status.owner}}" data-scope="scopeCategories" color="#207a4b" bindchange="toggleScope" /></view>
+      <view class="scope-row"><text>打卡任务</text><switch checked="{{scopeCheckins}}" disabled="{{!status.owner}}" data-scope="scopeCheckins" color="#207a4b" bindchange="toggleScope" /></view>
     </view>
     <button class="primary-button" wx:if="{{status.owner}}" bindtap="saveScopes" loading="{{loading}}">保存同步范围</button>
     <view class="invite-card card" wx:if="{{status.owner}}"><text class="field__label">邀请其他微信</text><view class="invite-code"><text>{{status.code || '------'}}</text><button bindtap="copyCode">复制</button></view><text class="muted">联动码 10 分钟有效，过期后可重新生成。</text><button class="secondary-button" bindtap="refreshCode" loading="{{loading}}">重新生成联动码</button></view>

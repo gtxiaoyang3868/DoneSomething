@@ -40,6 +40,7 @@ Page({
   toggleCompleted() { this.setData({ showCompleted: !this.data.showCompleted }) },
   openSheet() { this.setData({ showSheet: true, editingId: '', categoryIndex: 0, form: { name: '', description: '', progress: 0 } }) },
   openTaskDetail(event) { wx.navigateTo({ url: `/pages/task-detail/task-detail?id=${event.currentTarget.dataset.id}` }) },
+  openCheckins() { wx.navigateTo({ url: '/pages/checkins/checkins' }) },
   selectFilter(event) { this.setData({ selectedFilter: event.currentTarget.dataset.value }, () => this.applyFilters()) },
   closeSheet() { wx.hideKeyboard(); this.setData({ showSheet: false, keyboardHeight: 0 }) }, stopPropagation() {},
   onKeyboardHeightChange(event) { this.setData({ keyboardHeight: event.detail.height || 0 }) },

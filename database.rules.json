@@ -11,6 +11,14 @@
     ".read": "doc._openid == auth.openid",
     ".write": "doc._openid == auth.openid"
   },
+  "checkinTasks": {
+    ".read": false,
+    ".write": false
+  },
+  "checkinLogs": {
+    ".read": false,
+    ".write": false
+  },
   "accountLinks": {
     ".read": false,
     ".write": false

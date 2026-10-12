@@ -1,0 +1,5 @@
+<view class="page community-page">
+  <view class="community-tabs"><view class="community-tab {{activeTab === 'groups' ? 'community-tab--active' : ''}}" data-tab="groups" bindtap="switchTab">我的小组</view><view class="community-tab {{activeTab === 'square' ? 'community-tab--active' : ''}}" data-tab="square" bindtap="switchTab">广场</view></view>
+  <view class="community-hero card"><view class="community-hero__icon">◎</view><text class="community-hero__title">{{activeTab === 'groups' ? '和朋友一起坚持' : '围观大家正在坚持的事'}}</text><text class="muted">{{activeTab === 'groups' ? '任务和习惯都可以选择分享到小组，小组也可以保持私密。' : '只有主动同步到广场的内容才会被其他人看到。'}}</text><button class="primary-button" bindtap="comingSoon">{{activeTab === 'groups' ? '创建或加入小组' : '看看广场'}}</button></view>
+  <view class="privacy-note"><text>隐私说明</text><text class="muted">默认内容仅自己可见；分享小组、同步广场都需要你主动选择。</text></view>
+</view>

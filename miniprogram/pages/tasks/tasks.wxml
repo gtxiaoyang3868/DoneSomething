@@ -1,6 +1,6 @@
 <view class="page tasks-page" style="--user-font-size:{{fontSize}}rpx;font-size:{{fontSize}}rpx">
-  <view class="section-title"><text class="section-title__name">任务看板</text><text class="section-title__meta">{{tasks.length}} 个进行中</text></view>
-  <view class="checkin-entry card" bindtap="openCheckins"><view class="checkin-entry__icon">✓</view><view class="checkin-entry__body"><text class="checkin-entry__title">打卡任务</text><text class="muted">按次数完成目标，留下心得与照片</text></view><text class="task-enter">›</text></view>
+  <view class="content-tabs"><view class="content-tab content-tab--active">任务</view><view class="content-tab" bindtap="openCheckins">习惯</view></view>
+  <view class="section-title"><text class="section-title__name">任务</text><text class="section-title__meta">{{tasks.length}} 个进行中</text></view>
   <view class="search-box"><text class="search-box__icon">⌕</text><input class="search-input" value="{{searchQuery}}" bindinput="onSearch" placeholder="搜索任务名称、描述或标签" adjust-position="{{true}}" cursor-spacing="24" always-embed="{{true}}" /><text class="search-box__clear" wx:if="{{searchQuery}}" bindtap="clearSearch">×</text></view>
   <view class="count-rule">点击任务展开摘要，再进入完整详情；执行天数按记录日期去重</view>
   <scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="{{false}}"><view class="filter-row"><view class="filter-chip filter-chip--manage" bindtap="openCategoryManager"><text class="filter-chip__plus">＋</text><text>管理标签</text></view><view class="filter-chip {{selectedFilter === item.name ? 'filter-chip--active' : ''}}" wx:for="{{filterOptions}}" wx:key="name" data-value="{{item.name}}" bindtap="selectFilter"><text class="filter-chip__dot" style="background:{{item.color}}"></text><text>{{item.name}}</text></view></view></scroll-view>

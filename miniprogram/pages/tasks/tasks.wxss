@@ -1,8 +1,7 @@
 .tasks-page { padding-top: 12rpx; }
-.checkin-entry { min-height: 112rpx; margin: 0 4rpx 16rpx; padding: 18rpx 22rpx; display: flex; align-items: center; gap: 16rpx; box-sizing: border-box; }
-.checkin-entry__icon { width: 54rpx; height: 54rpx; flex: 0 0 54rpx; display: flex; align-items: center; justify-content: center; border-radius: 17rpx; background: #e4f3e9; color: #207a4b; font-size: 30rpx; font-weight: 700; }
-.checkin-entry__body { min-width: 0; flex: 1; }
-.checkin-entry__title { display: block; margin-bottom: 4rpx; font-weight: 600; }
+.content-tabs { height: 76rpx; margin: 2rpx 4rpx 18rpx; padding: 6rpx; display: grid; grid-template-columns: 1fr 1fr; gap: 6rpx; border-radius: 20rpx; background: #e5e5ea; box-sizing: border-box; }
+.content-tab { display: flex; align-items: center; justify-content: center; border-radius: 16rpx; color: #636366; font-size: 27rpx; font-weight: 500; }
+.content-tab--active { background: #fff; color: #1c1c1e; box-shadow: 0 2rpx 8rpx rgba(0,0,0,.08); }
 .count-rule { margin: -2rpx 4rpx 14rpx; color: #8e8e93; font-size: 22rpx; line-height: 1.45; }
 .filter-scroll { width: 100%; margin-bottom: 16rpx; white-space: nowrap; }
 .filter-row { display: inline-flex; align-items: center; gap: 12rpx; padding: 3rpx 4rpx; }

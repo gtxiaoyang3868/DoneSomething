@@ -1,1 +1,1 @@
-{ "navigationBarTitleText": "干什么呢", "enablePullDownRefresh": true }
+{ "navigationBarTitleText": "干什么呢", "enablePullDownRefresh": true, "usingComponents": { "habits-panel": "/components/habits-panel/habits-panel" } }

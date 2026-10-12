@@ -1,5 +1,6 @@
 <view class="page tasks-page" style="--user-font-size:{{fontSize}}rpx;font-size:{{fontSize}}rpx">
-  <view class="content-tabs"><view class="content-tab content-tab--active">任务</view><view class="content-tab" bindtap="openCheckins">习惯</view></view>
+  <view class="content-tabs"><view class="content-tab {{activeSection === 'tasks' ? 'content-tab--active' : ''}}" data-section="tasks" bindtap="switchSection">任务</view><view class="content-tab {{activeSection === 'habits' ? 'content-tab--active' : ''}}" data-section="habits" bindtap="switchSection">习惯</view></view>
+  <block wx:if="{{activeSection === 'tasks'}}">
   <view class="section-title"><text class="section-title__name">任务</text><text class="section-title__meta">{{tasks.length}} 个进行中</text></view>
   <view class="search-box"><text class="search-box__icon">⌕</text><input class="search-input" value="{{searchQuery}}" bindinput="onSearch" placeholder="搜索任务名称、描述或标签" adjust-position="{{true}}" cursor-spacing="24" always-embed="{{true}}" /><text class="search-box__clear" wx:if="{{searchQuery}}" bindtap="clearSearch">×</text></view>
   <view class="count-rule">点击任务展开摘要，再进入完整详情；执行天数按记录日期去重</view>
@@ -51,4 +52,6 @@
       <view class="category-manage-list"><view class="category-manage-row" wx:for="{{categories}}" wx:key="*this"><text class="tag" style="background:{{categoryColors[item] || '#728077'}};color:#fff">{{item}}</text><view><text class="category-action" data-index="{{index}}" bindtap="editCategory">编辑</text><text class="category-action category-action--delete" data-index="{{index}}" bindtap="deleteCategory">删除</text></view></view></view>
     </view>
   </view>
+  </block>
+  <habits-panel wx:else />
 </view>

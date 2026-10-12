@@ -4,7 +4,7 @@ const { progressColor } = require('../../utils/color')
 
 Page({
   data: {
-    tasks: [], completedTasks: [], allTasks: [], records: [], categories: [], categoryColors: {}, filterOptions: [], selectedFilter: '全部', searchQuery: '', expandedTaskIds: {}, showCompleted: false, categoryIndex: 0, fontSize: 30,
+    activeSection: 'tasks', tasks: [], completedTasks: [], allTasks: [], records: [], categories: [], categoryColors: {}, filterOptions: [], selectedFilter: '全部', searchQuery: '', expandedTaskIds: {}, showCompleted: false, categoryIndex: 0, fontSize: 30,
     showSheet: false, showCategoryManager: false, saving: false, editingId: '', keyboardHeight: 0,
     form: { name: '', description: '', progress: 0 }, categoryDraft: '', editingCategoryIndex: -1,
     colorPalette: ['#3f8f70','#d88a3d','#7b78b8','#3f78b8','#b75b75','#8b6b4a','#4f8f9d','#728077'], selectedCategoryColor: '#3f8f70'
@@ -40,7 +40,7 @@ Page({
   toggleCompleted() { this.setData({ showCompleted: !this.data.showCompleted }) },
   openSheet() { this.setData({ showSheet: true, editingId: '', categoryIndex: 0, form: { name: '', description: '', progress: 0 } }) },
   openTaskDetail(event) { wx.navigateTo({ url: `/pages/task-detail/task-detail?id=${event.currentTarget.dataset.id}` }) },
-  openCheckins() { wx.navigateTo({ url: '/pages/checkins/checkins' }) },
+  switchSection(event) { this.setData({ activeSection: event.currentTarget.dataset.section }) },
   selectFilter(event) { this.setData({ selectedFilter: event.currentTarget.dataset.value }, () => this.applyFilters()) },
   closeSheet() { wx.hideKeyboard(); this.setData({ showSheet: false, keyboardHeight: 0 }) }, stopPropagation() {},
   onKeyboardHeightChange(event) { this.setData({ keyboardHeight: event.detail.height || 0 }) },
